@@ -3,7 +3,10 @@ import assert from 'node:assert/strict';
 import { createHash } from 'node:crypto';
 import { readFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
-import { load } from '../src/sources/ops-tasks-json.mjs';
+import { mkdtempSync, writeFileSync, rmSync } from 'node:fs';
+import { tmpdir } from 'node:os';
+import { join } from 'node:path';
+import { load, unchanged } from '../src/sources/ops-tasks-json.mjs';
 import { selectOverdue } from '../src/core/select.mjs';
 
 const FIXTURE = fileURLToPath(new URL('./fixtures/registry-sample.json', import.meta.url));
@@ -14,6 +17,20 @@ test('load renvoie meta, tâches, index par id et empreinte SHA-256 du fichier',
   assert.equal(r.tasks.length, 24);
   assert.equal(r.byId.get('a-clore-haute').title, 'Livrer le rapport');
   assert.equal(r.hash, createHash('sha256').update(readFileSync(FIXTURE)).digest('hex'));
+});
+
+test('unchanged : vrai si le fichier n\'a pas bougé depuis load, faux après une écriture extérieure', () => {
+  const dir = mkdtempSync(join(process.env.AUDIT_DIR || tmpdir(), 'pt-reg-'));
+  try {
+    const f = join(dir, 'registry.json');
+    writeFileSync(f, readFileSync(FIXTURE));
+    const { hash } = load(f);
+    assert.equal(unchanged(f, hash), true);
+    writeFileSync(f, readFileSync(FIXTURE, 'utf8').replace('Livrer le rapport', 'Livrer le rapport modifié'));
+    assert.equal(unchanged(f, hash), false);
+  } finally {
+    rmSync(dir, { recursive: true, force: true });
+  }
 });
 
 test('load normalise priorité (high → P1) et owner vide (→ unknown)', () => {

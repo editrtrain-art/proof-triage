@@ -3,10 +3,9 @@
 // Lecture seule sur le registre : il est ouvert une fois, son empreinte est revérifiée en fin de run.
 import { parseArgs } from 'node:util';
 import { existsSync, readFileSync, mkdirSync, writeFileSync } from 'node:fs';
-import { createHash } from 'node:crypto';
 import { resolve, dirname, join, basename } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { load } from '../src/sources/ops-tasks-json.mjs';
+import { load, unchanged } from '../src/sources/ops-tasks-json.mjs';
 import { selectOverdue } from '../src/core/select.mjs';
 import { claims } from '../src/core/extract.mjs';
 import { decide } from '../src/core/verdict.mjs';
@@ -85,10 +84,7 @@ const meta = {
   net: o.net,
   simulate: o.simulate,
 };
-// shortcut: non couvert par un test (il faudrait écrire le registre pendant le run) ; injecter la relecture si ce chemin bouge.
-if (createHash('sha256').update(readFileSync(registry)).digest('hex') !== reg.hash) {
-  fail('le registre a changé pendant le run (écriture extérieure) : aucun rapport écrit, relancer.');
-}
+if (!unchanged(registry, reg.hash)) fail('le registre a changé pendant le run (écriture extérieure) : aucun rapport écrit, relancer.');
 const report = toReport(rows, meta);
 
 if (o.explain) {
