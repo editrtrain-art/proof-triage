@@ -166,6 +166,11 @@ test('suggestion : un tour du user déjà accompli plus loin dans les notes n\'e
   assert.equal(run({ notes: 'Validé par le user. | 22/10 : v0.2 écrite, à valider par le user.' }).suggestion.kind, 'réaffecter-user');
 });
 
+test('suggestion : une validation niée ou à venir n\'efface pas le tour du user écrit avant elle', () => {
+  assert.equal(run({ notes: 'v0.1 écrite, à valider par le user. | 21/10 : pas encore validé par le user.' }).suggestion?.kind, 'réaffecter-user');
+  assert.equal(run({ notes: 'v0.1 écrite, à relire par le user. | 21/10 : sera relue par le user demain.' }).suggestion?.kind, 'réaffecter-user');
+});
+
 test('suggestion : rien sur une tâche close (--explain d\'une tâche done)', () => {
   assert.equal(run({ status: 'done', notes: 'À valider par le user.' }).suggestion, null);
 });

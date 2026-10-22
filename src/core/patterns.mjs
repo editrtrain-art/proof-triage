@@ -52,6 +52,9 @@ export const USER_DONE = [
   /geste (?:du )?user (?:fait|effectu)/i,
   /ENVOI USER (?:FAIT|EFFECTU)/i,
 ];
+// Un participe à venir n'est pas accompli : « doit être validé », « sera relue », « en attente d'être validée ».
+// La négation (« pas encore validé ») se lit avec NEGATION, comme pour les verbes de livraison.
+export const TO_COME = /(?<!\p{L})(?:être|etre|sera|seront)\s*$/iu;
 
 export const URL = /https?:\/\/[^\s<>"'`»)\]]+/g;
 // Une URL ne prouve une livraison que dans une phrase de livraison, ou « en ligne sur … ».

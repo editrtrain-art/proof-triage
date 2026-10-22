@@ -175,6 +175,19 @@ test('pas un tour du user : une décision déjà prise par le user, un user cit�
   for (const n of ['Décision prise par le user le 31/08.', 'Le user a validé la v0.1.', 'Compte user créé.']) assert.deepEqual(claims(task(n)).userTurns, [], n);
 });
 
+test('tour du user accompli : validé, relu, geste fait, envoi fait', () => {
+  for (const n of ['Validé par le user le 21/10.', 'v0.2 relue par le user.', 'Le user a validé la v0.1.', 'Geste user fait le 20/10.', 'ENVOI USER fait.']) {
+    assert.equal(claims(task(n)).userDone.length, 1, n);
+  }
+});
+
+test('pas accompli : un participe nié ou à venir n\'est pas un tour du user fait', () => {
+  for (const n of ['Pas encore validé par le user.', 'Toujours pas relue par le user.', 'Elle n\'a pas été validée par le user.',
+    'Doit être validée par le user.', 'Sera validé par le user demain.', 'Les captures seront validées par le user.', 'En attente d\'être relue par le user.']) {
+    assert.deepEqual(claims(task(n)).userDone, [], n);
+  }
+});
+
 test('notes absentes : tout est vide, rien ne casse', () => {
   const c = claims({ id: 'x' });
   for (const k of ['paths', 'shas', 'urls', 'blockers', 'obsolete', 'dateConditions', 'links', 'userTurns']) assert.deepEqual(c[k], [], k);

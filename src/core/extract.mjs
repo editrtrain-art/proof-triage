@@ -1,5 +1,5 @@
 // Affirmations vérifiables d'une tâche. PUR : n'exécute rien, ne lit rien, garde l'extrait source.
-import { DELIVERY, DELIVERY_UPPER, NEGATION, BLOCKERS, USER_TURN, USER_DONE, OBSOLETE, CONDITION, URL, ONLINE, TO_DO_BEFORE, PATH, PATH_TAIL, SHA, COMMIT_WORD, SHA256_BEFORE, LINK, DATE } from './patterns.mjs';
+import { DELIVERY, DELIVERY_UPPER, NEGATION, BLOCKERS, USER_TURN, USER_DONE, TO_COME, OBSOLETE, CONDITION, URL, ONLINE, TO_DO_BEFORE, PATH, PATH_TAIL, SHA, COMMIT_WORD, SHA256_BEFORE, LINK, DATE } from './patterns.mjs';
 
 const SNIPPET = 160;
 const snip = (s) => s.trim().slice(0, SNIPPET);
@@ -35,6 +35,8 @@ function datesIn(text, year) {
 const before = (s, m) => s.slice(Math.max(0, m.index - 24), m.index);
 const delivers = (s) => [...s.matchAll(DELIVERY), ...s.matchAll(DELIVERY_UPPER)].some((m) => !NEGATION.test(before(s, m)));
 const online = (s) => [...s.matchAll(ONLINE)].some((m) => !NEGATION.test(before(s, m)) && !TO_DO_BEFORE.test(before(s, m)));
+// Tour du user accompli, ni nié ni à venir.
+const userDone = (s) => USER_DONE.map((re) => s.match(re)).find((m) => m && !NEGATION.test(before(s, m)) && !TO_COME.test(before(s, m)));
 
 const addDays =(iso, n) => new Date(Date.parse(iso) + n * 86400000).toISOString().slice(0, 10);
 
@@ -68,9 +70,9 @@ export function claims(task) {
       const b = BLOCKERS.find((re) => re.test(s));
       if (b) out.blockers.push({ value: s.match(b)[0], role: 'blocker', snippet, n });
       // Un tour du user accompli dans la phrase l'emporte sur un tour demandé (« geste user fait »).
-      const done = USER_DONE.find((re) => re.test(s));
+      const done = userDone(s);
       const u = USER_TURN.find((re) => re.test(s));
-      if (done) out.userDone.push({ value: s.match(done)[0], role: 'user-done', snippet, n });
+      if (done) out.userDone.push({ value: done[0], role: 'user-done', snippet, n });
       else if (u) out.userTurns.push({ value: s.match(u)[0], role: 'user-turn', snippet, n });
       const o = OBSOLETE.find((re) => re.test(s));
       if (o) out.obsolete.push({ value: s.match(o)[0], role: 'obsolete', snippet });
