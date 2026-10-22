@@ -14,7 +14,7 @@ const FIXTURE = fileURLToPath(new URL('./fixtures/registry-sample.json', import.
 test('load renvoie meta, tâches, index par id et empreinte SHA-256 du fichier', () => {
   const r = load(FIXTURE);
   assert.equal(r.meta.schemaVersion, 1);
-  assert.equal(r.tasks.length, 24);
+  assert.equal(r.tasks.length, 25);
   assert.equal(r.byId.get('a-clore-haute').title, 'Livrer le rapport');
   assert.equal(r.hash, createHash('sha256').update(readFileSync(FIXTURE)).digest('hex'));
 });
@@ -43,7 +43,7 @@ test('selectOverdue garde todo/doing/open en retard, exclut parked, done, cancel
   const { tasks } = load(FIXTURE);
   const ids = selectOverdue(tasks, { today: '2026-10-22', limit: 100 }).map((t) => t.id);
   for (const out of ['r-parked', 's-done', 't-futur', 'u-sans-due', 'z-annulee-ancienne']) assert.ok(!ids.includes(out), out);
-  assert.equal(ids.length, 19);
+  assert.equal(ids.length, 20);
 });
 
 test('selectOverdue trie par échéance croissante puis priorité, et coupe à limit', () => {

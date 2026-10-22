@@ -32,10 +32,18 @@ before(() => {
   git('commit', '-q', '-m', 'other');
   const other = git('rev-parse', '--short=10', 'HEAD');
   for (const f of ['script.mjs', 'page.md', 'brouillon.md']) writeFileSync(join(root, 'docs', f), 'x');
+  // Sous-dépôt : le chemin cité « tools/x.mjs » n'existe que sous sub/, et un commit de sub/ le touche.
+  const sub = join(root, 'sub');
+  mkdirSync(join(sub, 'tools'), { recursive: true });
+  execFileSync('git', ['-C', sub, 'init', '-q']);
+  writeFileSync(join(sub, 'tools', 'x.mjs'), 'x');
+  execFileSync('git', ['-C', sub, ...G, 'add', 'tools/x.mjs']);
+  execFileSync('git', ['-C', sub, ...G, 'commit', '-q', '-m', 'x']);
+  const subSha = execFileSync('git', ['-C', sub, 'rev-parse', '--short=10', 'HEAD'], { encoding: 'utf8' }).trim();
   registry = join(root, 'registry.json');
-  writeFileSync(registry, readFileSync(FIXTURE, 'utf8').replaceAll('{{SHA_OTHER}}', other).replaceAll('{{SHA}}', sha));
+  writeFileSync(registry, readFileSync(FIXTURE, 'utf8').replaceAll('{{SHA_OTHER}}', other).replaceAll('{{SHA_SUB}}', subSha).replaceAll('{{SHA}}', sha));
   cfg = join(base, 'proof-triage.config.json');
-  writeFileSync(cfg, JSON.stringify({ root, registry: 'registry.json', repos: ['.'], outDir: 'AUDIT' }));
+  writeFileSync(cfg, JSON.stringify({ root, registry: 'registry.json', repos: ['.', 'sub'], outDir: 'AUDIT' }));
 });
 after(() => rmSync(base, { recursive: true, force: true }));
 
@@ -50,7 +58,7 @@ test('tri complet : un verdict attendu par tâche en retard, exclusions respect�
   const report = JSON.parse(readFileSync(join(dir, 'report.json'), 'utf8'));
   assert.equal(report.meta.tool, 'proof-triage');
   assert.equal(report.meta.registryHash, before);
-  assert.equal(report.meta.overdueTotal, 19);
+  assert.equal(report.meta.overdueTotal, 20);
 
   const got = Object.fromEntries(report.rows.map((x) => [x.id, [x.verdict, x.confidence, ...x.flags.filter((f) => f !== 'avancement')].join(' ')]));
   assert.deepEqual(got, {
@@ -73,6 +81,7 @@ test('tri complet : un verdict attendu par tâche en retard, exclusions respect�
     'p-recurrente': 'à-vérifier  récurrente',
     'q-avancement': 'à-vérifier basse',
     'w-secrets': 'à-vérifier ',
+    'x-sous-depot': 'clore haute',
   });
 });
 

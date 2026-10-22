@@ -21,6 +21,7 @@
     { "id": "o-jplus", "title": "Mesure", "status": "todo", "owner": "claude", "priority": "P2", "due": "2026-09-15", "tags": [], "notes": "Publié le 01/09 ; mesurer à J+7." },
     { "id": "p-recurrente", "title": "Relevé hebdo", "status": "todo", "owner": "claude", "priority": "P2", "due": "2026-09-16", "tags": [], "recurrence": "weekly", "notes": "Relevé écrit : docs/rapport.md (commit {{SHA}})." },
     { "id": "q-avancement", "title": "Brouillon", "status": "todo", "owner": "claude", "priority": "P2", "due": "2026-09-17", "tags": [], "notes": "Brouillon dans docs/brouillon.md, à finir." },
+    { "id": "x-sous-depot", "title": "Script dans un sous-dépôt", "status": "todo", "owner": "claude", "priority": "P2", "due": "2026-09-19", "tags": [], "notes": "Script écrit : tools/x.mjs (commit {{SHA_SUB}})." },
     { "id": "w-secrets", "title": "Clé", "status": "todo", "owner": "", "priority": "P2", "due": "2026-09-18", "tags": [], "notes": "Clé posée dans .secrets/cle.env." },
     { "id": "r-parked", "title": "Parquée", "status": "parked", "owner": "claude", "priority": "P2", "due": "2026-08-01", "tags": [], "notes": "" },
     { "id": "s-done", "title": "Faite", "status": "done", "owner": "claude", "priority": "P2", "due": "2026-08-01", "doneDate": "2026-08-02", "tags": [], "notes": "" },

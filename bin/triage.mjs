@@ -65,8 +65,10 @@ for (const t of tasks) {
   const c = claims(t);
   const results = { files: {}, commits: {}, urls: {} };
   const cited = c.paths.filter((p) => p.role !== 'context').map((p) => p.value);
-  for (const p of c.paths) results.files[p.value] = checkFile(p.value, { root, refuseSegments: cfg.refuseSegments });
   for (const s of c.shas) results.commits[s.value] = await checkCommit(s.value, { root, repos: cfg.repos || [], paths: cited });
+  // Un chemin absent à la racine est cherché dans le dépôt d'un commit trouvé qui le touche (et seulement là).
+  const under = (p) => Object.values(results.commits).filter((r) => r.state === 'found' && r.repo !== '.' && r.touches.includes(p)).map((r) => r.repo);
+  for (const p of c.paths) results.files[p.value] = checkFile(p.value, { root, refuseSegments: cfg.refuseSegments, under: under(p.value) });
   if (o.net) for (const u of c.urls) results.urls[u.value] = await checkUrl(u.value);
   for (const { map, state } of simulate) {
     const keys = { files: c.paths, commits: c.shas, urls: c.urls }[map];

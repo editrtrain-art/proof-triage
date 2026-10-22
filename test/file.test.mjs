@@ -46,6 +46,20 @@ test('segments refusés configurables', () => {
   assert.equal(checkFile('docs/a.md', { root, refuseSegments: ['docs'] }).state, 'refused');
 });
 
+test('absent à la racine, présent dans un sous-dépôt désigné (under) → present, chemin réel préfixé', () => {
+  mkdirSync(join(root, 'sub', 'tools'), { recursive: true });
+  writeFileSync(join(root, 'sub', 'tools', 'x.mjs'), 'x');
+  assert.deepEqual(checkFile('tools/x.mjs', { root, under: ['sub'] }), { state: 'present', real: 'sub/tools/x.mjs' });
+  assert.equal(checkFile('tools/x.mjs', { root }).state, 'absent');
+  assert.equal(checkFile('tools/y.mjs', { root, under: ['sub'] }).state, 'absent');
+});
+
+test('under ne contourne aucun refus (.., .secrets, sortie de racine)', () => {
+  assert.equal(checkFile('k.env', { root, under: ['.secrets'] }).state, 'refused');
+  assert.equal(checkFile('f.md', { root, under: ['../outside'] }).state, 'refused');
+  assert.equal(checkFile('f.md', { root, under: ['escape'] }).state, 'refused');
+});
+
 test('lien ou jonction qui sort de la racine → refused (chemin canonique contrôlé)', () => {
   assert.equal(checkFile('escape/f.md', { root }).state, 'refused');
 });
