@@ -1,10 +1,10 @@
-// Contrôle d'une URL citée (opt-in --net). GET jamais HEAD seul (le HEAD ment, mémoire 23/09), sans cookie,
+// Contrôle d'une URL citée (opt-in --net). GET jamais HEAD seul (un HEAD peut répondre 404 là où le GET répond 200), sans cookie,
 // redirections suivies à la main et chaque cible revalidée : http(s) seulement, aucun hôte local, privé ou lien-local,
 // y compris un nom public qui résout vers une IP privée. Corps jamais lu.
 import { isIP, isIPv4 } from 'node:net';
 import { lookup as dnsLookup } from 'node:dns/promises';
 
-// Recopié de tools/affiliate/link-health.mjs (classify, 2026-10-22). Pure : ne fait que lire un statut.
+// Recopié de tools/affiliate/link-health.mjs (classify, 2026). Pure : ne fait que lire un statut.
 /** Traduit un code HTTP en état exploitable. L'anti-bot est un état à part, jamais une mort. */
 export function classify(status) {
   const s = Number(status) || 0;

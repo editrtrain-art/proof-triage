@@ -164,7 +164,7 @@ test('ids de tâches cités (kebab, 3 segments mini, au moins une lettre)', () =
   assert.deepEqual(values(c.links), ['z-annulee-ancienne', 'a-b-c']);
 });
 
-test('tour du user : formules relevées au registre réel (22/10)', () => {
+test('tour du user : formules relevées sur un registre réel', () => {
   for (const n of ['v0.1 écrite, à valider par le user.', 'QUESTION A TRANCHER PAR LE USER, une bonne fois.', 'RESTE à trancher par le user : polices.',
     'BROUILLONS FAITS, en attente de la relecture du user.', 'La capture est un GESTE USER.', 'RESTE USER : Codex.', 'Procédure 00-LANCEMENT-A-FAIRE-PAR-TOI.md.', 'Relance rédigée, ENVOI USER depuis le compte.']) {
     assert.equal(claims(task(n)).userTurns.length, 1, n);

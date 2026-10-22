@@ -8,3 +8,5 @@ ops-tasks*.json
 !test/fixtures/*.json
 node_modules/
 .env*
+# Contexte local (poste, outils, comptes, mesures du registre réel) : jamais publié
+*.local.md

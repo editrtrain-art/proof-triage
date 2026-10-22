@@ -1,4 +1,4 @@
-// Un cas par ligne de la table §4 d'ARCHITECTURE.md, plus les pièges du challenge du 22/10.
+// Un cas par ligne de la table §4 d'ARCHITECTURE.md, plus les pièges relevés au challenge de conception.
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { claims } from '../src/core/extract.mjs';
@@ -80,7 +80,7 @@ test('ligne 3b : livrable présent ET URL ok → clore, moyenne', () => {
   assert.deepEqual([v.verdict, v.confidence], ['clore', 'moyenne']);
 });
 
-test('piège : une URL seulement mentionnée qui répond ne prouve rien (relevé réel du 22/10)', () => {
+test('piège : une URL seulement mentionnée qui répond ne prouve rien (cas relevé sur un registre réel)', () => {
   const v = run({ notes: 'DIAGNOSTIC FAIT : docs/a.md. Le lien http://ex.com/c redirige.' }, { files: present, urls: { 'http://ex.com/c': { state: 'ok', status: 200 } } });
   assert.notEqual(v.verdict, 'clore');
 });
@@ -182,7 +182,7 @@ test('dépend-de : la tâche citée doit être dans la MÊME phrase, même si le
   assert.equal(decide(t, claims(t), { files: {}, commits: {}, urls: {} }, { today: TODAY, byId: deps }).suggestion.kind, 'réaffecter-user');
 });
 
-test('suggestion : rien pour une tâche sans-objet (relevé réel : kit remplacé par un autre lot)', () => {
+test('suggestion : rien pour une tâche sans-objet (cas relevé : lot remplacé par un autre)', () => {
   const v = run({ notes: 'Remplacé par le lot R11. Procédure 00-LANCEMENT-A-FAIRE-PAR-TOI.md.' });
   assert.equal(v.verdict, 'sans-objet');
   assert.equal(v.suggestion, null);

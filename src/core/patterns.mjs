@@ -3,7 +3,7 @@
 export const PATTERNS_VERSION = 1;
 
 // Verbes de livraison ACCOMPLIE (participes). « à livrer » ne compte pas.
-// v1 : liste d'ARCHITECTURE.md §3 + rédigé, généré, ajouté (relevés sur le registre réel le 22/10).
+// v1 : liste d'ARCHITECTURE.md §3 + rédigé, généré, ajouté (relevés sur un registre réel, 2026).
 // « produit », « fait » et « commit » sont aussi des noms (« page produit », « en fait », « le commit de la review ») :
 // ils ne comptent qu'en MAJUSCULES de statut (« VOLET CLAUDE FAIT ») ou sous la forme « commité ».
 export const DELIVERY = /(?<!\p{L})(?:livr[ée]e?s?|[ée]crite?s?|cr[ée][ée]e?s?|ins[ée]r[ée]e?s?|publi[ée]e?s?|pos[ée]e?s?|commit+[ée]e?s?|r[ée]dig[ée]e?s?|g[ée]n[ée]r[ée]e?s?|ajout[ée]e?s?)(?!\p{L})/giu;
@@ -33,7 +33,7 @@ export const OBSOLETE = [
 // Conséquences conditionnelles. « avant le JJ/MM » seul = échéance, absent d'ici.
 export const CONDITION = /(?<!\p{L})(J\+(\d+)|sinon|fen[êe]tres?|expir\p{L}*)(?!\p{L})/iu;
 
-// Tour du user : la suite de la tâche lui revient (relevé sur le registre réel le 22/10). Sert une SUGGESTION, jamais un verdict.
+// Tour du user : la suite de la tâche lui revient (relevé sur un registre réel, 2026). Sert une SUGGESTION, jamais un verdict.
 // « Décision prise par le user » ou « le user a validé » sont du passé : pas un tour du user.
 export const USER_TURN = [
   /geste (?:du )?user/i,

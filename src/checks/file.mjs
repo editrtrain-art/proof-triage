@@ -4,7 +4,7 @@
 import { existsSync, realpathSync } from 'node:fs';
 import { resolve, relative, isAbsolute, sep } from 'node:path';
 
-// under : dépôts où un commit TROUVÉ touche ce chemin (décision user du 22/10) ; essayés seulement si le chemin
+// under : dépôts où un commit TROUVÉ touche ce chemin ; essayés seulement si le chemin
 // est absent à la racine, avec les mêmes refus. Le CLI ne les passe que pour un commit qui touche le chemin.
 export function checkFile(p, { root, refuseSegments = ['.secrets'], under = [] }) {
   const r = checkAt(String(p), root, refuseSegments);

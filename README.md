@@ -2,7 +2,7 @@
 
 Proposes a verdict for each overdue task of a JSON task registry, from evidence a machine can check: a delivered file, a commit that touches it, a URL that answers. The triage itself is read-only; since v0.2 it can apply the decisions the user ticked, and a `task` command edits one task at a time.
 
-Status: v0.1 (2026). Design and verdict rules: `ARCHITECTURE.md` (French). Rules for agents: `CLAUDE.md`.
+Status: v0.2 (2026), MIT license. Design and verdict rules: `ARCHITECTURE.md` (French). Rules for agents: `CLAUDE.md`. Machine-specific context lives in `*.local.md` files, which git ignores.
 
 ## Use
 

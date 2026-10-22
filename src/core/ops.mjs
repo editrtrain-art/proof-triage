@@ -7,8 +7,8 @@ const ISO = /^\d{4}-\d{2}-\d{2}$/;
 export const STATUSES = ['todo', 'doing', 'open', 'parked', 'done', 'cancelled'];
 const OWNERS = ['claude', 'user'];
 const PRIORITIES = ['P0', 'P1', 'P2', 'P3', 'P4'];
-const RECURRENCES = ['daily', 'weekly', 'monthly', 'quarterly', 'trimestriel', 'per-post', 'per-product']; // relevées au registre le 22/10
-// Forme des ids relevée au registre (majuscules admises : kit-1-1-L0) ; jamais d'espace ni de caractère Markdown.
+const RECURRENCES = ['daily', 'weekly', 'monthly', 'quarterly', 'trimestriel', 'per-post', 'per-product']; // valeurs en usage dans le registre
+// Forme des ids relevée au registre (majuscules admises : lot-1-L0) ; jamais d'espace ni de caractère Markdown.
 const ID = /^[A-Za-z0-9][A-Za-z0-9-]*$/;
 const CLOSED = ['done', 'cancelled'];
 
