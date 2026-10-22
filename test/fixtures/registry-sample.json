@@ -1,0 +1,31 @@
+{
+  "schemaVersion": 1,
+  "updated": "2026-10-22",
+  "note": "Registre SYNTHÉTIQUE pour les tests. Aucune tâche réelle. {{SHA}} et {{SHA_OTHER}} sont remplacés par le test CLI.",
+  "tasks": [
+    { "id": "a-clore-haute", "title": "Livrer le rapport", "status": "todo", "owner": "claude", "priority": "P0", "due": "2026-09-01", "tags": [], "source": "", "notes": "Rapport produit : docs/rapport.md, commit {{SHA}}." },
+    { "id": "v-priorite", "title": "Même échéance, priorité plus basse", "status": "todo", "owner": "claude", "priority": "high", "due": "2026-09-01", "tags": [], "notes": "Rien de fait." },
+    { "id": "b-clore-url", "title": "Publier la page", "status": "todo", "owner": "claude", "priority": "P2", "due": "2026-09-02", "tags": [], "notes": "Page publiée : docs/page.md ; en ligne sur https://example.com/page" },
+    { "id": "c-source-seule", "title": "Relire le rapport", "status": "todo", "owner": "user", "priority": "P2", "due": "2026-09-03", "tags": [], "source": "docs/rapport.md", "notes": "Relire le rapport." },
+    { "id": "d-reste-sans-user", "title": "Relecture", "status": "doing", "owner": "claude", "priority": "P2", "due": "2026-09-04", "tags": [], "notes": "RESTE à relire la section 2." },
+    { "id": "e-bloquee", "title": "Signer", "status": "todo", "owner": "user", "priority": "P1", "due": "2026-09-05", "tags": [], "notes": "GATÉ par la validation du contrat. En attente de la signature." },
+    { "id": "f-commit-sans-lien", "title": "Écrire le script", "status": "todo", "owner": "claude", "priority": "P2", "due": "2026-09-06", "tags": [], "notes": "Script écrit : docs/script.mjs (commit {{SHA_OTHER}})." },
+    { "id": "g-cite-annulee", "title": "Suite de z", "status": "todo", "owner": "claude", "priority": "P2", "due": "2026-09-07", "tags": [], "notes": "Voir la tâche z-annulee-ancienne (annulée)." },
+    { "id": "h-avant-le", "title": "Échéance simple", "status": "todo", "owner": "claude", "priority": "P2", "due": "2026-09-08", "tags": [], "notes": "À livrer avant le 15/09." },
+    { "id": "i-chemins-refuses", "title": "Hors racine", "status": "todo", "owner": "claude", "priority": "P3", "due": "2026-09-09", "tags": [], "notes": "Écrit dans ../hors/racine.md et D:/ailleurs/x.md." },
+    { "id": "j-migree", "title": "Migrée", "status": "todo", "owner": "claude", "priority": "P3", "due": "2026-09-10", "tags": [], "migratedTo": "autre/registre.json", "notes": "" },
+    { "id": "k-remplacee", "title": "Remplacée", "status": "todo", "owner": "user", "priority": "P3", "due": "2026-09-11", "tags": [], "notes": "Remplacée par la tâche a-clore-haute." },
+    { "id": "l-contradiction", "title": "Livré mais bloqué", "status": "todo", "owner": "claude", "priority": "P1", "due": "2026-09-12", "tags": [], "notes": "Livrable écrit : docs/rapport.md (commit {{SHA}}). RESTENT 2 gestes USER : valider." },
+    { "id": "m-commit-absent", "title": "Correctif", "status": "todo", "owner": "claude", "priority": "P2", "due": "2026-09-13", "tags": [], "notes": "Corrigé, commit deadbee1." },
+    { "id": "n-condition", "title": "Offre", "status": "todo", "owner": "user", "priority": "P2", "due": "2026-09-14", "tags": [], "notes": "Fenêtre ouverte jusqu'au 30/09, sinon l'offre tombe." },
+    { "id": "o-jplus", "title": "Mesure", "status": "todo", "owner": "claude", "priority": "P2", "due": "2026-09-15", "tags": [], "notes": "Publié le 01/09 ; mesurer à J+7." },
+    { "id": "p-recurrente", "title": "Relevé hebdo", "status": "todo", "owner": "claude", "priority": "P2", "due": "2026-09-16", "tags": [], "recurrence": "weekly", "notes": "Relevé produit : docs/rapport.md (commit {{SHA}})." },
+    { "id": "q-avancement", "title": "Brouillon", "status": "todo", "owner": "claude", "priority": "P2", "due": "2026-09-17", "tags": [], "notes": "Brouillon dans docs/brouillon.md, à finir." },
+    { "id": "w-secrets", "title": "Clé", "status": "todo", "owner": "", "priority": "P2", "due": "2026-09-18", "tags": [], "notes": "Clé posée dans .secrets/cle.env." },
+    { "id": "r-parked", "title": "Parquée", "status": "parked", "owner": "claude", "priority": "P2", "due": "2026-08-01", "tags": [], "notes": "" },
+    { "id": "s-done", "title": "Faite", "status": "done", "owner": "claude", "priority": "P2", "due": "2026-08-01", "doneDate": "2026-08-02", "tags": [], "notes": "" },
+    { "id": "t-futur", "title": "Pas en retard", "status": "todo", "owner": "claude", "priority": "P2", "due": "2026-12-01", "tags": [], "notes": "" },
+    { "id": "u-sans-due", "title": "Sans échéance", "status": "todo", "owner": "claude", "priority": "P2", "tags": [], "notes": "" },
+    { "id": "z-annulee-ancienne", "title": "Annulée", "status": "cancelled", "owner": "claude", "priority": "P2", "due": "2026-08-01", "tags": [], "notes": "" }
+  ]
+}

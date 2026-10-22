@@ -7,6 +7,6 @@
   "engines": { "node": ">=20" },
   "scripts": {
     "triage": "node bin/triage.mjs",
-    "test": "node --test test/"
+    "test": "node --test"
   }
 }
