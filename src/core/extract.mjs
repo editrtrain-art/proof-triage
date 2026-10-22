@@ -1,11 +1,11 @@
 // Affirmations vérifiables d'une tâche. PUR : n'exécute rien, ne lit rien, garde l'extrait source.
-import { DELIVERY, NEGATION, BLOCKERS, OBSOLETE, CONDITION, URL, PATH, PATH_TAIL, SHA, COMMIT_WORD, SHA256_BEFORE, LINK, DATE } from './patterns.mjs';
+import { DELIVERY, DELIVERY_UPPER, NEGATION, BLOCKERS, OBSOLETE, CONDITION, URL, PATH, PATH_TAIL, SHA, COMMIT_WORD, SHA256_BEFORE, LINK, DATE } from './patterns.mjs';
 
 const SNIPPET = 160;
 const snip = (s) => s.trim().slice(0, SNIPPET);
 const uniq = (list) => list.filter((c, i) => list.findIndex((d) => d.value === c.value) === i);
-// Un chemin cité plusieurs fois garde son rôle le plus fort, avec l'extrait qui le justifie.
-const ROLE_RANK = { context: 0, mention: 1, deliverable: 2 };
+// Une valeur citée plusieurs fois garde son rôle le plus fort, avec l'extrait qui le justifie.
+const ROLE_RANK = { context: 0, mention: 1, deliverable: 2, hex: 0, commit: 1 };
 function strongest(list) {
   const m = new Map();
   for (const c of list) if (!m.has(c.value) || ROLE_RANK[c.role] > ROLE_RANK[m.get(c.value).role]) m.set(c.value, c);
@@ -32,7 +32,8 @@ function datesIn(text, year) {
   }).filter((x) => /^\d{4}-(0[1-9]|1[0-2])-(0[1-9]|[12]\d|3[01])$/.test(x.iso));
 }
 
-const delivers = (s) => [...s.matchAll(DELIVERY)].some((m) => !NEGATION.test(s.slice(Math.max(0, m.index - 12), m.index)));
+const delivers = (s) => [...s.matchAll(DELIVERY), ...s.matchAll(DELIVERY_UPPER)]
+  .some((m) => !NEGATION.test(s.slice(Math.max(0, m.index - 24), m.index)));
 
 const addDays =(iso, n) => new Date(Date.parse(iso) + n * 86400000).toISOString().slice(0, 10);
 
@@ -78,6 +79,7 @@ export function claims(task) {
     }
   }
   out.paths = strongest(out.paths);
-  for (const k of ['shas', 'urls', 'links']) out[k] = uniq(out[k]);
+  out.shas = strongest(out.shas);
+  for (const k of ['urls', 'links']) out[k] = uniq(out[k]);
   return out;
 }

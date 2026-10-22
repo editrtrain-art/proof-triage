@@ -1,12 +1,15 @@
 // Le SHA cité est-il un commit d'un des dépôts configurés, et touche-t-il les chemins cités ?
 // SHA validé par regex AVANT tout appel ; git par execFile sans shell, arguments fixes, env purgé des GIT_*,
 // et GIT_CEILING_DIRECTORIES pour qu'un dossier non-dépôt ne remonte pas vers un dépôt parent.
+// Une panne d'environnement (git absent, délai, aucun dépôt utilisable) donne « error », JAMAIS « absent » :
+// « absent » déclenche une contradiction, il doit rester une preuve contre la tâche, pas contre le poste.
 import { execFile } from 'node:child_process';
 import { promisify } from 'node:util';
 import { resolve, dirname } from 'node:path';
 
 const run = promisify(execFile);
 const SHA_RE = /^[0-9a-f]{7,40}$/;
+const ERROR = { state: 'error', touches: [] };
 
 async function git(dir, args) {
   const env = Object.fromEntries(Object.entries(process.env).filter(([k]) => !k.startsWith('GIT_')));
@@ -20,16 +23,24 @@ async function git(dir, args) {
 // shortcut: un commit de fusion ne liste aucun fichier avec show --name-only ; il donne « found » sans touches. Améliorer si un SHA de fusion apparaît au tri.
 export async function checkCommit(sha, { root, repos = [], paths = [] }) {
   if (!SHA_RE.test(String(sha))) return { state: 'refused', touches: [] };
-  for (const repo of repos) {
+  let usable = 0;
+  for (const raw of repos) {
+    const repo = String(raw).replace(/\\/g, '/').replace(/^(?:\.\/)+|\/+$/g, '') || '.';
     const dir = resolve(root, repo);
+    try { await git(dir, ['rev-parse', '--git-dir']); } catch { continue; }
+    usable++;
+    let type;
     try {
-      if ((await git(dir, ['cat-file', '-t', sha])).trim() !== 'commit') continue;
-      const files = (await git(dir, ['show', '--name-only', '--format=', sha])).split('\n').map((f) => f.trim()).filter(Boolean);
-      const touches = paths.filter((p) => files.includes(p) || files.some((f) => `${repo}/${f}` === p));
-      return { state: 'found', repo, touches };
-    } catch {
-      // pas un dépôt, SHA inconnu ou ambigu ici : dépôt suivant
+      type = (await git(dir, ['cat-file', '-t', sha])).trim();
+    } catch (e) {
+      if (typeof e.code === 'number' && !e.killed) continue; // git a répondu : objet inconnu ou ambigu dans ce dépôt
+      return ERROR;
     }
+    if (type !== 'commit') continue;
+    let files;
+    try { files = (await git(dir, ['show', '--name-only', '--format=', sha])).split('\n').map((f) => f.trim()).filter(Boolean); } catch { return ERROR; }
+    const touches = paths.filter((p) => files.includes(p) || files.some((f) => `${repo}/${f}` === p));
+    return { state: 'found', repo, touches };
   }
-  return { state: 'absent', touches: [] };
+  return usable ? { state: 'absent', touches: [] } : ERROR;
 }

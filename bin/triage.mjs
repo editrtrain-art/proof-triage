@@ -40,11 +40,15 @@ if (!/^\d{4}-\d{2}-\d{2}$/.test(o.today)) fail(`--today attend AAAA-MM-JJ, reçu
 if (!Number.isInteger(limit) || limit < 1) fail(`--limit attend un entier positif, reçu « ${o.limit} »`);
 
 // --simulate kind=state : force l'état de tous les contrôles d'un type (démo du contre-factuel).
-const KINDS = { file: 'files', commit: 'commits', url: 'urls' };
+const KINDS = {
+  file: { map: 'files', states: ['present', 'absent', 'refused'] },
+  commit: { map: 'commits', states: ['found', 'absent', 'refused', 'error'] },
+  url: { map: 'urls', states: ['ok', 'gone', 'antibot', 'server', 'unreachable', 'redirected', 'refused', 'other'] },
+};
 const simulate = o.simulate.map((s) => {
   const [kind, state] = s.split('=');
-  if (!KINDS[kind] || !state) fail(`--simulate attend file|commit|url=<état>, reçu « ${s} »`);
-  return { map: KINDS[kind], state };
+  if (!KINDS[kind]?.states.includes(state)) fail(`--simulate attend file|commit|url=<état connu>, reçu « ${s} »`);
+  return { map: KINDS[kind].map, state };
 });
 
 const reg = load(registry);
@@ -81,8 +85,9 @@ const meta = {
   net: o.net,
   simulate: o.simulate,
 };
+// shortcut: non couvert par un test (il faudrait écrire le registre pendant le run) ; injecter la relecture si ce chemin bouge.
 if (createHash('sha256').update(readFileSync(registry)).digest('hex') !== reg.hash) {
-  console.error('proof-triage : ATTENTION, le registre a changé pendant le run (écriture extérieure) ; rapport à refaire.');
+  fail('le registre a changé pendant le run (écriture extérieure) : aucun rapport écrit, relancer.');
 }
 const report = toReport(rows, meta);
 

@@ -3,7 +3,7 @@
   "updated": "2026-10-22",
   "note": "Registre SYNTHÉTIQUE pour les tests. Aucune tâche réelle. {{SHA}} et {{SHA_OTHER}} sont remplacés par le test CLI.",
   "tasks": [
-    { "id": "a-clore-haute", "title": "Livrer le rapport", "status": "todo", "owner": "claude", "priority": "P0", "due": "2026-09-01", "tags": [], "source": "", "notes": "Rapport produit : docs/rapport.md, commit {{SHA}}." },
+    { "id": "a-clore-haute", "title": "Livrer le rapport", "status": "todo", "owner": "claude", "priority": "P0", "due": "2026-09-01", "tags": [], "source": "", "notes": "Rapport écrit : docs/rapport.md, commit {{SHA}}." },
     { "id": "v-priorite", "title": "Même échéance, priorité plus basse", "status": "todo", "owner": "claude", "priority": "high", "due": "2026-09-01", "tags": [], "notes": "Rien de fait." },
     { "id": "b-clore-url", "title": "Publier la page", "status": "todo", "owner": "claude", "priority": "P2", "due": "2026-09-02", "tags": [], "notes": "Page publiée : docs/page.md ; en ligne sur https://example.com/page" },
     { "id": "c-source-seule", "title": "Relire le rapport", "status": "todo", "owner": "user", "priority": "P2", "due": "2026-09-03", "tags": [], "source": "docs/rapport.md", "notes": "Relire le rapport." },
@@ -19,7 +19,7 @@
     { "id": "m-commit-absent", "title": "Correctif", "status": "todo", "owner": "claude", "priority": "P2", "due": "2026-09-13", "tags": [], "notes": "Corrigé, commit deadbee1." },
     { "id": "n-condition", "title": "Offre", "status": "todo", "owner": "user", "priority": "P2", "due": "2026-09-14", "tags": [], "notes": "Fenêtre ouverte jusqu'au 30/09, sinon l'offre tombe." },
     { "id": "o-jplus", "title": "Mesure", "status": "todo", "owner": "claude", "priority": "P2", "due": "2026-09-15", "tags": [], "notes": "Publié le 01/09 ; mesurer à J+7." },
-    { "id": "p-recurrente", "title": "Relevé hebdo", "status": "todo", "owner": "claude", "priority": "P2", "due": "2026-09-16", "tags": [], "recurrence": "weekly", "notes": "Relevé produit : docs/rapport.md (commit {{SHA}})." },
+    { "id": "p-recurrente", "title": "Relevé hebdo", "status": "todo", "owner": "claude", "priority": "P2", "due": "2026-09-16", "tags": [], "recurrence": "weekly", "notes": "Relevé écrit : docs/rapport.md (commit {{SHA}})." },
     { "id": "q-avancement", "title": "Brouillon", "status": "todo", "owner": "claude", "priority": "P2", "due": "2026-09-17", "tags": [], "notes": "Brouillon dans docs/brouillon.md, à finir." },
     { "id": "w-secrets", "title": "Clé", "status": "todo", "owner": "", "priority": "P2", "due": "2026-09-18", "tags": [], "notes": "Clé posée dans .secrets/cle.env." },
     { "id": "r-parked", "title": "Parquée", "status": "parked", "owner": "claude", "priority": "P2", "due": "2026-08-01", "tags": [], "notes": "" },

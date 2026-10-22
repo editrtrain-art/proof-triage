@@ -32,6 +32,26 @@ test('une livraison niée ne compte pas ; « écrit (non commité) » reste une 
   assert.equal(claims(task('docs/a.mjs écrit (non commité).')).paths[0].role, 'deliverable');
 });
 
+test('noms ambigus : « page produit », « en fait », « le commit de la review » ne sont pas des livraisons', () => {
+  for (const n of ['La page produit ranthrice/src/kit.astro est à revoir.', 'En fait docs/x.md reste à écrire.', 'Corriger docs/x.md dans le commit de la review.']) {
+    assert.equal(claims(task(n)).paths[0].role, 'mention', n);
+  }
+  for (const n of ['VOLET CLAUDE FAIT : docs/x.md.', 'PRODUIT : docs/x.md.', 'Commité : docs/x.md.']) {
+    assert.equal(claims(task(n)).paths[0].role, 'deliverable', n);
+  }
+});
+
+test('négations avec mots intercalés : « pas encore livré », « n\'a pas été écrit »', () => {
+  for (const n of ['docs/guide.md pas encore livré.', 'docs/guide.md n\'a pas été écrit.', 'docs/guide.md toujours pas publié.']) {
+    assert.equal(claims(task(n)).paths[0].role, 'mention', n);
+  }
+});
+
+test('un SHA cité deux fois garde son rôle le plus fort (commit > hex)', () => {
+  const c = claims(task('Alerte abc1234f reçue. | 07/10 : commit abc1234f poussé.'));
+  assert.deepEqual(c.shas.map((s) => [s.value, s.role]), [['abc1234f', 'commit']]);
+});
+
 test('« à livrer » n\'est pas un verbe de livraison accompli', () => {
   const c = claims(task('Reste à livrer docs/a.md'));
   assert.equal(c.paths[0].role, 'mention');

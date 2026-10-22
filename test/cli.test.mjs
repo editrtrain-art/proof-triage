@@ -91,6 +91,7 @@ test('--explain rejoue une tâche ; --simulate commit=absent fait basculer clore
 test('--explain sur un id inconnu, --simulate mal formé, config absente → code 2 et message', () => {
   assert.equal(cli('--explain', 'nope').status, 2);
   assert.equal(cli('--explain', 'a-clore-haute', '--simulate', 'commit').status, 2);
+  assert.equal(cli('--explain', 'a-clore-haute', '--simulate', 'commit=abesnt').status, 2);
   const r = spawnSync(process.execPath, [BIN, '--config', join(base, 'absent.json')], { encoding: 'utf8' });
   assert.equal(r.status, 2);
   assert.match(r.stderr, /proof-triage\.config\.example\.json/);

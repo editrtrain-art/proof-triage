@@ -36,7 +36,7 @@ test('hexa sans le mot commit, absent → ignoré (pas de contradiction) ; trouv
   const absent = run({ notes: 'Alerte 1a1322e21f94bbe2 reçue.' }, { commits: { '1a1322e21f94bbe2': { state: 'absent', touches: [] } } });
   assert.ok(!absent.flags.includes('contradiction'));
   assert.ok(!absent.evidence.some((e) => e.kind === 'commit'));
-  const found = run({ notes: 'Rapport produit : docs/a.md (correctif abc1234).' }, { files: present, commits: touching });
+  const found = run({ notes: 'Rapport écrit : docs/a.md (correctif abc1234).' }, { files: present, commits: touching });
   assert.deepEqual([found.verdict, found.confidence], ['clore', 'haute']);
 });
 
@@ -66,12 +66,12 @@ test('piège : « RESTE » seul n\'est pas un blocage', () => {
 });
 
 test('ligne 3 : livrable présent ET commit qui touche ce chemin → clore, haute', () => {
-  const v = run({ notes: 'Rapport produit : docs/a.md, commit abc1234.' }, { files: present, commits: touching });
+  const v = run({ notes: 'Rapport écrit : docs/a.md, commit abc1234.' }, { files: present, commits: touching });
   assert.deepEqual([v.verdict, v.confidence], ['clore', 'haute']);
 });
 
 test('ligne 3b : livrable présent ET commit sans lien au chemin → clore, moyenne', () => {
-  const v = run({ notes: 'Rapport produit : docs/a.md, commit abc1234.' }, { files: present, commits: unrelated });
+  const v = run({ notes: 'Rapport écrit : docs/a.md, commit abc1234.' }, { files: present, commits: unrelated });
   assert.deepEqual([v.verdict, v.confidence], ['clore', 'moyenne']);
 });
 
@@ -86,7 +86,7 @@ test('piège : le chemin du champ source n\'est jamais une preuve', () => {
 });
 
 test('piège : livrable présent sans commit ni URL → pas clore (à-vérifier, avancement)', () => {
-  const v = run({ notes: 'Rapport produit : docs/a.md.' }, { files: present });
+  const v = run({ notes: 'Rapport écrit : docs/a.md.' }, { files: present });
   assert.deepEqual([v.verdict, v.confidence], ['à-vérifier', 'basse']);
   assert.ok(v.flags.includes('avancement'));
 });
@@ -127,16 +127,16 @@ test('une condition sans date ne s\'affiche pas en preuve (bruit)', () => {
 });
 
 test('récurrente : jamais clore, drapeau récurrente', () => {
-  const v = run({ recurrence: 'weekly', notes: 'Relevé produit : docs/a.md, commit abc1234.' }, { files: present, commits: touching });
+  const v = run({ recurrence: 'weekly', notes: 'Relevé écrit : docs/a.md, commit abc1234.' }, { files: present, commits: touching });
   assert.equal(v.verdict, 'à-vérifier');
   assert.ok(v.flags.includes('récurrente'));
 });
 
 test('chaque preuve garde extrait → contrôle → résultat', () => {
-  const v = run({ notes: 'Rapport produit : docs/a.md, commit abc1234.' }, { files: present, commits: touching });
+  const v = run({ notes: 'Rapport écrit : docs/a.md, commit abc1234.' }, { files: present, commits: touching });
   const f = v.evidence.find((e) => e.kind === 'file');
   assert.deepEqual([f.value, f.state], ['docs/a.md', 'present']);
-  assert.match(f.snippet, /Rapport produit/);
+  assert.match(f.snippet, /Rapport écrit/);
   const c = v.evidence.find((e) => e.kind === 'commit');
   assert.match(c.detail, /site.*docs\/a\.md/);
 });

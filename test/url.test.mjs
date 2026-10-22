@@ -56,10 +56,16 @@ test('schémas, hôtes locaux, privés, lien-local et identifiants refusés sans
   const fetch = fakeFetch({});
   for (const u of ['ftp://ex.com/f', 'file:///etc/passwd', 'http://localhost:3000/', 'http://app.localhost/', 'http://[::1]/', 'http://169.254.169.254/latest',
     'http://10.0.0.1/', 'http://172.20.0.1/', 'http://192.168.0.1/', 'http://0.0.0.0/', 'http://[::ffff:127.0.0.1]/', 'http://[fe80::1]/', 'http://[fd00::1]/',
-    'https://user:pass@ex.com/', 'pas une url']) {
+    'https://user:pass@ex.com/', 'pas une url', 'http://[::7f00:1]/', 'http://[64:ff9b::a00:1]/', 'http://[fec0::1]/', 'http://[2002:7f00:1::1]/',
+    'http://198.18.0.1/', 'http://192.0.0.1/']) {
     assert.equal((await checkUrl(u, { fetch, lookup })).state, 'refused', u);
   }
   assert.equal(fetch.calls.length, 0);
+});
+
+test('IPv6 publique (2000::/3) acceptée', async () => {
+  const fetch = fakeFetch({ 'http://[2606:4700::1111]/': { status: 200 } });
+  assert.equal((await checkUrl('http://[2606:4700::1111]/', { fetch, lookup })).state, 'ok');
 });
 
 test('nom d\'hôte public qui résout vers une IP privée → refused', async () => {

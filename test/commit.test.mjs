@@ -52,8 +52,23 @@ test('SHA mal formé → refused, sans appel git', async () => {
   }
 });
 
-test('un sous-dossier non-dépôt ne remonte pas vers le dépôt parent', async () => {
-  assert.equal((await checkCommit(shaA, { root, repos: ['site/src'] })).state, 'absent');
+test('un sous-dossier non-dépôt ne remonte pas vers le dépôt parent (aucun dépôt utilisable → error)', async () => {
+  assert.equal((await checkCommit(shaA, { root, repos: ['site/src'] })).state, 'error');
+});
+
+test('panne d\'environnement (git introuvable) → error, jamais absent', async () => {
+  const path = process.env.PATH;
+  process.env.PATH = '';
+  try {
+    assert.equal((await checkCommit(shaA, { root, repos: ['site'] })).state, 'error');
+  } finally {
+    process.env.PATH = path;
+  }
+});
+
+test('nom de dépôt normalisé (./site/) pour la correspondance des chemins touchés', async () => {
+  const r = await checkCommit(shaA, { root, repos: ['./site/'], paths: ['site/src/a.md'] });
+  assert.deepEqual([r.state, r.repo, r.touches], ['found', 'site', ['site/src/a.md']]);
 });
 
 test('les variables GIT_* de l\'environnement sont ignorées', async () => {

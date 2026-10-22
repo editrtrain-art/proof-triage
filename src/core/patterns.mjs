@@ -3,10 +3,13 @@
 export const PATTERNS_VERSION = 1;
 
 // Verbes de livraison ACCOMPLIE (participes). « à livrer » ne compte pas.
-// v1 : liste d'ARCHITECTURE.md §3 + rédigé, généré, ajouté, fait (relevés sur le registre réel le 22/10).
-export const DELIVERY = /(?<!\p{L})(?:livr[ée]e?s?|[ée]crite?s?|produite?s?|cr[ée][ée]e?s?|ins[ée]r[ée]e?s?|publi[ée]e?s?|pos[ée]e?s?|commit(?:s|[ée]e?s?)?|r[ée]dig[ée]e?s?|g[ée]n[ée]r[ée]e?s?|ajout[ée]e?s?|faite?s?)(?!\p{L})/giu;
-// Négation juste avant le verbe : « aucun commit », « (non commité) », « rien publié ».
-export const NEGATION = /(?<!\p{L})(?:non|aucune?|rien|pas|sans|jamais)[\s(]*$/iu;
+// v1 : liste d'ARCHITECTURE.md §3 + rédigé, généré, ajouté (relevés sur le registre réel le 22/10).
+// « produit », « fait » et « commit » sont aussi des noms (« page produit », « en fait », « le commit de la review ») :
+// ils ne comptent qu'en MAJUSCULES de statut (« VOLET CLAUDE FAIT ») ou sous la forme « commité ».
+export const DELIVERY = /(?<!\p{L})(?:livr[ée]e?s?|[ée]crite?s?|cr[ée][ée]e?s?|ins[ée]r[ée]e?s?|publi[ée]e?s?|pos[ée]e?s?|commit+[ée]e?s?|r[ée]dig[ée]e?s?|g[ée]n[ée]r[ée]e?s?|ajout[ée]e?s?)(?!\p{L})/giu;
+export const DELIVERY_UPPER = /(?<!\p{L})(?:PRODUITE?S?|FAITE?S?)(?!\p{L})/gu;
+// Négation avant le verbe, mots intercalés compris : « aucun commit », « (non commité) », « pas encore livré », « n'a pas été écrit ».
+export const NEGATION = /(?<!\p{L})(?:non|aucune?|rien|pas|sans|jamais)(?:\s+(?:encore|été|ete|toujours|vraiment))*[\s(]*$/iu;
 
 // Blocages EXPLICITES. « RESTE » seul est un rappel ; « GATE » (quality gate) n'est pas « GATÉ ».
 export const BLOCKERS = [

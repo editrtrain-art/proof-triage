@@ -41,9 +41,9 @@ test('triage.md : en-tête avec date, décompte, empreinte courte, réseau', () 
 });
 
 test('triage.md : chaque preuve en trois temps (extrait → contrôle → résultat)', () => {
-  const ev = [{ kind: 'file', value: 'docs/a.md', snippet: 'Rapport produit : docs/a.md', state: 'present', detail: 'deliverable' }];
+  const ev = [{ kind: 'file', value: 'docs/a.md', snippet: 'Rapport écrit : docs/a.md', state: 'present', detail: 'deliverable' }];
   const md = toMarkdown(toReport([row('a', 'clore', 'haute', { evidence: ev })], META));
-  assert.match(md, /fichier docs\/a\.md \(deliverable\) → \*\*present\*\* · « Rapport produit : docs\/a\.md »/);
+  assert.match(md, /fichier docs\/a\.md \(deliverable\) → \*\*present\*\* · « Rapport écrit : docs\/a\.md »/);
 });
 
 test('esc neutralise le Markdown et le HTML venus des notes, sur une seule ligne', () => {

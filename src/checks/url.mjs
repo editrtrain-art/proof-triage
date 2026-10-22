@@ -19,13 +19,14 @@ export function classify(status) {
 
 function privateIp(ip) {
   if (isIPv4(ip)) {
-    const [a, b] = ip.split('.').map(Number);
+    const [a, b, c] = ip.split('.').map(Number);
     return a === 0 || a === 10 || a === 127 || a >= 224 || (a === 169 && b === 254) || (a === 172 && b >= 16 && b <= 31)
-      || (a === 192 && b === 168) || (a === 100 && b >= 64 && b <= 127);
+      || (a === 192 && b === 168) || (a === 100 && b >= 64 && b <= 127) || (a === 198 && (b === 18 || b === 19)) || (a === 192 && b === 0 && c === 0);
   }
-  const v = ip.toLowerCase();
-  // IPv6 : non spécifiée, boucle, ULA fc00::/7, lien-local fe80::/10, et toute IPv4 mappée (::ffff:…) refusée en bloc.
-  return v === '::' || v === '::1' || /^f[cd]/.test(v) || /^fe[89ab]/.test(v) || v.startsWith('::ffff:');
+  // IPv6 en LISTE BLANCHE : seule l'unicast globale 2000::/3 passe, hors 6to4 (2002::/16, qui embarque une IPv4).
+  // Écarte d'un coup boucle, non spécifiée, IPv4 mappée ou compatible, NAT64, ULA, lien-local, site-local.
+  const first = parseInt(ip.split(':')[0] || '0', 16);
+  return !(first >= 0x2000 && first <= 0x3fff) || first === 0x2002;
 }
 
 // shortcut: le DNS est résolu ici puis à nouveau par fetch (fenêtre de rebinding) ; acceptable pour 13 URL citées en lecture.
