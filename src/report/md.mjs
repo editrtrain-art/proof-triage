@@ -30,6 +30,8 @@ export function toMarkdown({ meta, rows }) {
     const flags = r.flags.length ? ` · ${r.flags.join(', ')}` : '';
     out.push(`- [ ] **${esc(r.id)}** — ${esc(r.title)} (${esc(r.owner)}, échéance ${esc(r.due)}, ${esc(r.priority)}) · confiance ${r.confidence ?? '—'}${flags}`);
     out.push(`  - ${esc(r.why)}`);
+    if (r.summary) out.push(`  - résumé (LLM, indicatif, ne décide rien) : ${esc(r.summary)}`);
+    if (r.summaryError) out.push(`  - résumé indisponible : ${esc(r.summaryError)}`);
     if (r.suggestion) out.push(`  - suggestion : ${r.suggestion.kind}${r.suggestion.id ? ` ${esc(r.suggestion.id)}` : ''} · ${esc(r.suggestion.why)}`);
     for (const e of r.evidence) {
       const detail = e.detail ? ` (${esc(e.detail)})` : '';

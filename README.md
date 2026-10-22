@@ -42,7 +42,9 @@ node bin/task.mjs add <id> --title "..." --due YYYY-MM-DD --owner claude|user [-
 node bin/task.mjs delete <id> --confirm             # prefer cancel
 ```
 
-Options: `--format ops-tasks-json|markdown|github-issues` · `--limit N` (default 20) · `--today YYYY-MM-DD` · `--registry <file>` · `--net` (check cited URLs, off by default) · `--config <file>` · `--simulate file|commit|url=<state>` (repeatable).
+Summaries (v0.3, opt-in): `--summarize` sends notes of 500+ characters, one at a time, to Cloudflare Workers AI only (`CLOUDFLARE_AI_TOKEN` and `CLOUDFLARE_ACCOUNT_ID` from the environment) and shows a two-sentence summary under each task. It runs after the verdict and never changes it; a provider error leaves the row as it is.
+
+Options: `--summarize` · `--format ops-tasks-json|markdown|github-issues` · `--limit N` (default 20) · `--today YYYY-MM-DD` · `--registry <file>` · `--net` (check cited URLs, off by default) · `--config <file>` · `--simulate file|commit|url=<state>` (repeatable).
 
 Output: `<outDir>/proof-triage-<registry>-top<N>[-net][-sim]-<date>/` with `report.json` (`schemaVersion: 1`, `meta.tool = "proof-triage"`) and `triage.md`. `AUDIT_DIR` overrides the output root.
 

@@ -11,6 +11,7 @@ import { selectOverdue } from '../src/core/select.mjs';
 import { applyOp } from '../src/core/ops.mjs';
 import { planApply } from '../src/core/apply.mjs';
 import { triageTasks } from '../src/run.mjs';
+import { summarize, needsSummary, DEFAULT_MODEL } from '../src/llm/summarize.mjs';
 import { toReport, SCHEMA_VERSION } from '../src/report/json.mjs';
 import { toMarkdown, checkedIds } from '../src/report/md.mjs';
 import { loadConfig, DEFAULT_CONFIG, localToday } from '../src/lib/config.mjs';
@@ -29,8 +30,13 @@ const { values: o } = parseArgs({
     apply: { type: 'string' },
     'dry-run': { type: 'boolean', default: false },
     format: { type: 'string' },
+    summarize: { type: 'boolean', default: false },
   },
 });
+
+// --summarize : identifiants Workers AI dans l'environnement seulement (jamais lus dans un fichier de secrets).
+const ai = { token: process.env.CLOUDFLARE_AI_TOKEN, accountId: process.env.CLOUDFLARE_ACCOUNT_ID };
+if (o.summarize && (!ai.token || !ai.accountId)) fail('--summarize exige CLOUDFLARE_AI_TOKEN et CLOUDFLARE_ACCOUNT_ID dans l\'environnement (Cloudflare Workers AI) ; rien n\'a été envoyé.');
 
 let conf;
 try { conf = loadConfig(o.config, o.registry); } catch (e) { fail(e.message); }
@@ -90,6 +96,16 @@ if (o.explain) {
 }
 
 const rows = await triageTasks(tasks, reg, { root, repos: cfg.repos || [], refuseSegments: cfg.refuseSegments, today: o.today, net: o.net, simulate });
+// Résumés APRÈS les verdicts : affichage seulement, une requête à la fois, une erreur ne bloque pas le tri.
+let summarized = 0;
+if (o.summarize) {
+  for (const row of rows) {
+    const notes = reg.byId.get(row.id)?.notes;
+    if (!needsSummary(notes)) continue;
+    const s = await summarize(notes, ai);
+    if (s.summary) { row.summary = s.summary; summarized++; } else row.summaryError = s.error;
+  }
+}
 
 const meta = {
   today: o.today,
@@ -99,6 +115,7 @@ const meta = {
   overdueTotal: selectOverdue(reg.tasks, { today: o.today }).length,
   net: o.net,
   simulate: o.simulate,
+  ...(o.summarize ? { summaries: { model: DEFAULT_MODEL, count: summarized } } : {}),
 };
 if (!unchanged(registry, reg.hash)) fail('le registre a changé pendant le run (écriture extérieure) : aucun rapport écrit, relancer.');
 const report = toReport(rows, meta);
