@@ -96,6 +96,15 @@ test('formules sans-objet explicites ; une simple citation d\'une tâche annulé
   assert.deepEqual(claims(task('Voir la tâche z-annulee-ancienne (annulée).')).obsolete, []);
 });
 
+test('la formule sans-objet doit ouvrir la phrase : un élément remplacé n\'est pas la tâche', () => {
+  for (const n of ['12/09 : annulée car doublon.', 'Cette tâche est remplacée par a-b-c.', 'Remplacé par le lot R11 (run complet).']) {
+    assert.equal(claims(task(n)).obsolete.length, 1, n);
+  }
+  for (const n of ['D-10 remplacée par D-17.', 'La mention a été retirée et remplacée par une note.']) {
+    assert.equal(claims(task(n)).obsolete.length, 0, n);
+  }
+});
+
 test('conditions datées : sinon/fenêtre/expire prennent la date de la phrase', () => {
   const c = claims(task('Fenêtre ouverte jusqu\'au 30/09, sinon l\'offre tombe.'));
   assert.deepEqual(values(c.dateConditions), ['2026-09-30']);

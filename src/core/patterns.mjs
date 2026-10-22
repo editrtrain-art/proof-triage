@@ -18,12 +18,14 @@ export const BLOCKERS = [
   /\bRESTE(?:NT)?\b.{0,80}\bUSER\b/u,
 ];
 
-// Formules sans-objet explicites. Citer une tâche annulée ne suffit pas.
+// Formules sans-objet explicites, en TÊTE de phrase (après une date ou « cette tâche est ») : sinon c'est
+// un élément de la tâche qui est remplacé (« D-10 remplacée par D-17 »), pas la tâche. Citer une tâche annulée ne suffit pas.
+const LEAD = String.raw`^\s*(?:[\d/-]+\s*:\s*)?(?:(?:cette\s+)?t[âa]che\s+(?:est\s+)?)?`;
 export const OBSOLETE = [
-  /(?<!\p{L})remplac[ée]e?s?\s+par(?!\p{L})/iu,
-  /(?<!\p{L})annul[ée]e?s?\s+car(?!\p{L})/iu,
-  /(?<!\p{L})migr[ée]e?s?\s+vers(?!\p{L})/iu,
-];
+  String.raw`remplac[ée]e?s?\s+par(?!\p{L})`,
+  String.raw`annul[ée]e?s?\s+car(?!\p{L})`,
+  String.raw`migr[ée]e?s?\s+vers(?!\p{L})`,
+].map((f) => new RegExp(LEAD + f, 'iu'));
 
 // Conséquences conditionnelles. « avant le JJ/MM » seul = échéance, absent d'ici.
 export const CONDITION = /(?<!\p{L})(J\+(\d+)|sinon|fen[êe]tres?|expir\p{L}*)(?!\p{L})/iu;
