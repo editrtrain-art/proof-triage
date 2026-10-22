@@ -34,7 +34,11 @@ src/lib/        config locale, convention de nommage des sorties
 ## 3. Modules et contrats
 | Fichier | Contrat |
 |---|---|
-| `src/sources/ops-tasks-json.mjs` | `load(path)` → `{meta, tasks, byId, hash, doc}` (`tasks` normalisées pour le tri, `doc` brut pour l'écriture) ; `unchanged(path, hash)` ; `save(path, doc, {expectHash, backupDir, stamp?})` |
+| `src/sources/index.mjs` | `detectFormat(path)` (`.md` → `markdown`, tableau JSON → `github-issues`, objet avec `tasks` → `ops-tasks-json`) ; `loadRegistry(path, format?)` → contrat commun, `meta.format` |
+| `src/sources/normalize.mjs` | contrat commun : `registry(raw, format, tasks, extra)` → `{meta, tasks (priorité et owner normalisés), byId, hash}` |
+| `src/sources/ops-tasks-json.mjs` | `load(path)` → contrat commun + `doc` brut ; `unchanged(path, hash)` ; `save(path, doc, {expectHash, backupDir, stamp?})` : **seul format qui s'écrit** |
+| `src/sources/markdown.mjs` | lecture seule : `- [ ] Titre [due:…] [owner:…] [prio:…] [id:…]`, lignes indentées = notes, `- [x]` = done, id = titre sans accents si absent |
+| `src/sources/github-issues.mjs` | lecture seule, sur un EXPORT `gh issue list --json …` (aucun appel réseau) : jalon = échéance, étiquette `P0`-`P4` = priorité, `owner:claude` = owner (user sinon), corps = notes, `OPEN` = todo |
 | `src/core/select.mjs` | `selectOverdue(tasks, {today, limit})` : statuts `todo`, `doing`, `open` dont `due` < aujourd'hui, triés par `due` puis priorité |
 | `src/core/extract.mjs` + `patterns.mjs` | `claims(task)` → `{paths, shas, urls, blockers, obsolete, dateConditions, links, userTurns, userDone}`, chaque `Claim = {value, role, snippet[, n]}` (`n` = numéro de phrase) |
 | `src/checks/file.mjs` | `checkFile(p, {root, refuseSegments, under})` → `{state: present|absent|refused, real}` |
@@ -105,5 +109,5 @@ Un tour du user accompli (« validé par le user », « geste user fait ») annu
 
 ## 8. Feuille de route
 - **v0.1** tri seul · **v0.2** écriture (`task`, `--apply`), suggestions, panneau de tableau de bord (livrées).
-- **v0.3** (en cours) : adaptateurs de registre (liste Markdown, GitHub Issues), résumé LLM des notes longues (résume, ne décide jamais), démo web statique générée à partir de la fixture synthétique seulement.
+- **v0.3** (en cours) : adaptateurs de registre Markdown et GitHub Issues, en lecture seule (livrés) ; résumé LLM des notes longues (résume, ne décide jamais) ; démo web statique générée à partir de la fixture synthétique seulement.
 - Reporté : lecture du contenu des fichiers, conséquences orphelines croisées sur tout le registre, levée automatique d'un blocage quand sa pièce existe.

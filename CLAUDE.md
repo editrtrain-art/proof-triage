@@ -25,7 +25,7 @@ Architecture, contrats et règles de verdict : `ARCHITECTURE.md` (fait foi pour 
 - Une règle de motif se calibre sur des données réelles EN LOCAL, se teste sur des phrases synthétiques dans le dépôt.
 
 ## Commandes
-- `node bin/triage.mjs [--limit 20] [--registry <fichier>] [--today AAAA-MM-JJ] [--net]`
+- `node bin/triage.mjs [--limit 20] [--registry <fichier>] [--format ops-tasks-json|markdown|github-issues] [--today AAAA-MM-JJ] [--net]` (seul `ops-tasks-json` s'écrit ; les deux autres formats sont en lecture seule)
 - `node bin/triage.mjs --explain <id> [--simulate commit=absent]` : rejoue le verdict d'une tâche avec une preuve forcée
 - `node bin/triage.mjs --apply <dossier de tri> [--dry-run]` : applique les cases cochées du `triage.md`
 - `node bin/task.mjs add|close|cancel|reschedule|reassign|delete <id> [--note …] [--due …] [--owner …] [--recurrence …] [--confirm]`

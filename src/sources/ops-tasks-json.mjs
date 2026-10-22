@@ -2,12 +2,9 @@
 // save() = la SEULE écriture (v0.2, commandes task et triage --apply) : refuse un registre modifié depuis la lecture,
 // refuse un document invalide, sauvegarde les octets d'origine, puis écrit de façon atomique au format du registre.
 import { readFileSync, writeFileSync, renameSync, mkdirSync, copyFileSync, rmSync, constants } from 'node:fs';
-import { createHash } from 'node:crypto';
 import { join, basename } from 'node:path';
 import { validate } from '../core/ops.mjs';
-
-const PRIORITY = { high: 'P1', medium: 'P2', low: 'P3' };
-const sha256 = (buf) => createHash('sha256').update(buf).digest('hex');
+import { registry, sha256 } from './normalize.mjs';
 
 /** Le registre est-il resté identique depuis load() ? Une écriture extérieure en cours de run invalide le rapport. */
 export const unchanged = (path, hash) => sha256(readFileSync(path)) === hash;
@@ -15,19 +12,8 @@ export const unchanged = (path, hash) => sha256(readFileSync(path)) === hash;
 export function load(path) {
   const raw = readFileSync(path);
   const doc = JSON.parse(raw.toString('utf8'));
-  // tasks = copies normalisées pour le tri ; doc reste brut pour l'écriture.
-  const tasks = (doc.tasks || []).map((t) => ({
-    ...t,
-    priority: PRIORITY[t.priority] || t.priority || 'P9',
-    owner: t.owner || 'unknown',
-  }));
-  return {
-    meta: { schemaVersion: doc.schemaVersion, updated: doc.updated, count: tasks.length },
-    tasks,
-    byId: new Map(tasks.map((t) => [t.id, t])),
-    hash: sha256(raw),
-    doc,
-  };
+  // tasks = copies normalisées pour le tri ; doc reste brut pour l'écriture (seul format qui s'écrit).
+  return { ...registry(raw, 'ops-tasks-json', doc.tasks || [], { schemaVersion: doc.schemaVersion, updated: doc.updated }), doc };
 }
 
 const CHANGED = 'registre modifié depuis la lecture : rien écrit, relancer';

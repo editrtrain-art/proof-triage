@@ -1,0 +1,6 @@
+[
+  { "number": 12, "title": "Écrire le guide", "state": "OPEN", "body": "Guide écrit : docs/guide.md.\nRESTE à relire.", "milestone": { "title": "S37", "dueOn": "2026-09-05T07:00:00Z" }, "labels": [{ "name": "P1" }, { "name": "owner:claude" }], "assignees": [] },
+  { "number": 13, "title": "Valider la maquette", "state": "OPEN", "body": "En attente de la validation du client.", "milestone": { "title": "S38", "dueOn": "2026-09-12T07:00:00Z" }, "labels": [], "assignees": [{ "login": "someone" }] },
+  { "number": 14, "title": "Fermée", "state": "CLOSED", "body": "", "milestone": { "title": "S36", "dueOn": "2026-08-29T07:00:00Z" }, "labels": [], "assignees": [] },
+  { "number": 15, "title": "Sans jalon", "state": "OPEN", "body": null, "milestone": null, "labels": [{ "name": "bug" }], "assignees": [] }
+]

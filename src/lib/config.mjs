@@ -1,6 +1,6 @@
 // Config locale partagée par les CLI : proof-triage.config.json (ignoré par git). Aucun chemin machine dans le code.
 import { existsSync, readFileSync, readdirSync, rmSync } from 'node:fs';
-import { resolve, dirname, join, basename } from 'node:path';
+import { resolve, dirname, join, basename, extname } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { auditName, slug } from './audit-name.mjs';
 
@@ -13,7 +13,7 @@ export function loadConfig(configPath, registryOpt) {
   const cfg = JSON.parse(readFileSync(configPath, 'utf8'));
   const root = resolve(dirname(configPath), cfg.root);
   const registry = registryOpt ? resolve(registryOpt) : resolve(root, cfg.registry);
-  const target = slug(basename(registry, '.json'));
+  const target = slug(basename(registry, extname(registry)));
   // AUDIT_DIR remplace la racine des sorties (tests) ; le nom suit <outil>-<cible>-<fenetre>-<date>.
   const outRoot = process.env.AUDIT_DIR || resolve(root, cfg.outDir || 'AUDIT');
   const outDir = (window, date) => join(outRoot, auditName({ tool: 'proof-triage', target, window, date }));

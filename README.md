@@ -14,6 +14,20 @@ node bin/triage.mjs --explain <task-id> --simulate commit=absent   # counterfact
 node --test
 ```
 
+Registry formats (v0.3), detected from the file or forced with `--format` (or `"format"` in the config):
+
+| Format | File | Mapping |
+|---|---|---|
+| `ops-tasks-json` | `{ "tasks": [...] }` | native; the only format that can be written |
+| `markdown` | `.md` list: `- [ ] Title [due:YYYY-MM-DD] [owner:claude\|user] [prio:P1] [id:x]`, indented lines = notes, `- [x]` = done | read-only |
+| `github-issues` | export of `gh issue list --state all --json number,title,state,body,milestone,labels,assignees` | milestone due date = due, `P0`-`P4` label = priority, `owner:claude` label = owner (else user), body = notes; read-only, no network call |
+
+```
+node bin/triage.mjs --registry backlog.md
+gh issue list --state all --limit 1000 --json number,title,state,body,milestone,labels,assignees > issues.json
+node bin/triage.mjs --registry issues.json
+```
+
 Writing to the registry (v0.2), always after a backup of the original bytes:
 
 ```
@@ -26,7 +40,7 @@ node bin/task.mjs add <id> --title "..." --due YYYY-MM-DD --owner claude|user [-
 node bin/task.mjs delete <id> --confirm             # prefer cancel
 ```
 
-Options: `--limit N` (default 20) · `--today YYYY-MM-DD` · `--registry <file>` · `--net` (check cited URLs, off by default) · `--config <file>` · `--simulate file|commit|url=<state>` (repeatable).
+Options: `--format ops-tasks-json|markdown|github-issues` · `--limit N` (default 20) · `--today YYYY-MM-DD` · `--registry <file>` · `--net` (check cited URLs, off by default) · `--config <file>` · `--simulate file|commit|url=<state>` (repeatable).
 
 Output: `<outDir>/proof-triage-<registry>-top<N>[-net][-sim]-<date>/` with `report.json` (`schemaVersion: 1`, `meta.tool = "proof-triage"`) and `triage.md`. `AUDIT_DIR` overrides the output root.
 

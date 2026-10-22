@@ -6,6 +6,7 @@ import { parseArgs } from 'node:util';
 import { existsSync, readFileSync, mkdirSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { load, save, unchanged } from '../src/sources/ops-tasks-json.mjs';
+import { loadRegistry, detectFormat } from '../src/sources/index.mjs';
 import { selectOverdue } from '../src/core/select.mjs';
 import { claims } from '../src/core/extract.mjs';
 import { decide } from '../src/core/verdict.mjs';
@@ -31,6 +32,7 @@ const { values: o } = parseArgs({
     simulate: { type: 'string', multiple: true, default: [] },
     apply: { type: 'string' },
     'dry-run': { type: 'boolean', default: false },
+    format: { type: 'string' },
   },
 });
 
@@ -48,6 +50,8 @@ if (o.apply) {
   const report = JSON.parse(readFileSync(reportFile, 'utf8'));
   if (report.meta?.tool !== 'proof-triage' || report.schemaVersion !== SCHEMA_VERSION) fail('report.json n\'est pas un tri proof-triage au schéma attendu');
   if (report.meta.simulate?.length) fail(`ce tri a été produit avec --simulate (${report.meta.simulate.join(', ')}) : preuves fictives, --apply refusé`);
+  const fmt = o.format || cfg.format || detectFormat(registry);
+  if (fmt !== 'ops-tasks-json') fail(`écriture : format ops-tasks-json seulement (registre au format ${fmt}, en lecture seule)`);
   const reg = load(registry);
   const { ops, skipped } = planApply(report, checkedIds(readFileSync(mdFile, 'utf8')), reg.doc);
   for (const op of ops) console.log(`${o['dry-run'] ? '(simulation) ' : ''}${op.kind} ${op.id}`);
@@ -78,8 +82,10 @@ const simulate = o.simulate.map((s) => {
   return { map: KINDS[kind].map, state };
 });
 
-const reg = load(registry);
-const rawById = new Map(reg.doc.tasks.map((t) => [t.id, t]));
+let reg;
+try { reg = loadRegistry(registry, o.format || cfg.format); } catch (e) { fail(e.message); }
+// Empreinte par tâche sur sa forme brute (registre JSON) ou normalisée (autres formats, qui ne s'écrivent pas).
+const rawById = new Map((reg.doc?.tasks || reg.tasks).map((t) => [t.id, t]));
 let tasks;
 if (o.explain) {
   const t = reg.byId.get(o.explain);
@@ -111,6 +117,7 @@ for (const t of tasks) {
 const meta = {
   today: o.today,
   registryHash: reg.hash,
+  format: reg.meta.format,
   limit,
   overdueTotal: selectOverdue(reg.tasks, { today: o.today }).length,
   net: o.net,
