@@ -11,7 +11,9 @@ const SHA_RE = /^[0-9a-f]{7,40}$/;
 async function git(dir, args) {
   const env = Object.fromEntries(Object.entries(process.env).filter(([k]) => !k.startsWith('GIT_')));
   env.GIT_CEILING_DIRECTORIES = dirname(dir);
-  const { stdout } = await run('git', ['-C', dir, '-c', 'core.quotePath=false', ...args], { shell: false, env, timeout: 10000, windowsHide: true });
+  // fsmonitor coupé : aucun programme externe lancé par git ; maxBuffer large : un gros commit ne doit pas passer pour « absent ».
+  const { stdout } = await run('git', ['-C', dir, '-c', 'core.quotePath=false', '-c', 'core.fsmonitor=false', ...args],
+    { shell: false, env, timeout: 10000, windowsHide: true, maxBuffer: 64 * 1024 * 1024 });
   return stdout;
 }
 
