@@ -1,7 +1,7 @@
 // Bout en bout sur la fixture SYNTHÉTIQUE, dans une racine jetable qui est un dépôt git. Jamais le vrai registre.
 import { test, before, after } from 'node:test';
 import assert from 'node:assert/strict';
-import { mkdtempSync, mkdirSync, writeFileSync, readFileSync, existsSync, rmSync } from 'node:fs';
+import { mkdtempSync, mkdirSync, writeFileSync, readFileSync, readdirSync, existsSync, rmSync } from 'node:fs';
 import { execFileSync, spawnSync } from 'node:child_process';
 import { createHash } from 'node:crypto';
 import { tmpdir } from 'node:os';
@@ -95,6 +95,40 @@ test('--explain rejoue une tâche ; --simulate commit=absent fait basculer clore
   assert.match(sim.stdout, /contradiction/);
   assert.match(sim.stdout, /simulation : commit=absent/);
   assert.ok(!existsSync(join(audit, 'proof-triage-registry-top20-2026-10-22')));
+});
+
+test('--apply : dry-run sans écriture, puis seules les cases cochées clore/sans-objet non modifiées depuis le tri, une sauvegarde', () => {
+  const r = cli('--limit', '100');
+  assert.equal(r.status, 0, r.stderr);
+  const dir = join(audit, 'proof-triage-registry-top100-2026-10-22');
+  const md = join(dir, 'triage.md');
+  let text = readFileSync(md, 'utf8');
+  for (const id of ['a-clore-haute', 'j-migree', 'd-reste-sans-user', 'k-remplacee']) text = text.replace(`- [ ] **${id}**`, `- [x] **${id}**`);
+  writeFileSync(md, text);
+  // k-remplacee change dans le registre APRÈS le tri : la décision porte sur une version périmée.
+  writeFileSync(registry, readFileSync(registry, 'utf8').replace('Remplacée par la tâche a-clore-haute.', 'Remplacée par la tâche a-clore-haute. Relu.'));
+  const before = readFileSync(registry, 'utf8');
+
+  const dry = cli('--apply', dir, '--dry-run');
+  assert.equal(dry.status, 0, dry.stderr);
+  assert.match(dry.stdout, /close a-clore-haute/);
+  assert.match(dry.stdout, /cancel j-migree/);
+  assert.match(dry.stdout, /d-reste-sans-user.*replanifier/);
+  assert.match(dry.stdout, /k-remplacee.*modifiée depuis le tri/);
+  assert.equal(readFileSync(registry, 'utf8'), before);
+
+  const run = cli('--apply', dir);
+  assert.equal(run.status, 0, run.stderr);
+  const after = JSON.parse(readFileSync(registry, 'utf8')).tasks;
+  const st = (id) => after.find((t) => t.id === id).status;
+  assert.deepEqual([st('a-clore-haute'), st('j-migree'), st('d-reste-sans-user'), st('k-remplacee')], ['done', 'cancelled', 'doing', 'todo']);
+  assert.equal(readdirSync(join(audit, 'proof-triage-registry-backup-2026-10-22')).length, 1);
+
+  // Rejouer : les tâches ont changé, rien n'est réappliqué, aucune nouvelle sauvegarde.
+  const again = cli('--apply', dir);
+  assert.equal(again.status, 0, again.stderr);
+  assert.match(again.stdout, /rien à appliquer/);
+  assert.equal(readdirSync(join(audit, 'proof-triage-registry-backup-2026-10-22')).length, 1);
 });
 
 test('--explain sur un id inconnu, --simulate mal formé, config absente → code 2 et message', () => {

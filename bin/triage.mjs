@@ -1,42 +1,67 @@
 #!/usr/bin/env node
 // CLI mince : lit les options et la config, assemble les modules, écrit le rapport. Aucune logique de verdict ici.
-// Lecture seule sur le registre : il est ouvert une fois, son empreinte est revérifiée en fin de run.
+// Le tri est en lecture seule sur le registre : il est ouvert une fois, son empreinte est revérifiée en fin de run.
+// --apply <dossier> (v0.2) est la seule voie d'écriture du tri : cases cochées par le user, une sauvegarde, rien d'autre.
 import { parseArgs } from 'node:util';
 import { existsSync, readFileSync, mkdirSync, writeFileSync } from 'node:fs';
-import { resolve, dirname, join, basename } from 'node:path';
-import { fileURLToPath } from 'node:url';
-import { load, unchanged } from '../src/sources/ops-tasks-json.mjs';
+import { join } from 'node:path';
+import { load, save, unchanged } from '../src/sources/ops-tasks-json.mjs';
 import { selectOverdue } from '../src/core/select.mjs';
 import { claims } from '../src/core/extract.mjs';
 import { decide } from '../src/core/verdict.mjs';
+import { applyOp, taskHash } from '../src/core/ops.mjs';
+import { planApply } from '../src/core/apply.mjs';
 import { checkFile } from '../src/checks/file.mjs';
 import { checkCommit } from '../src/checks/commit.mjs';
 import { checkUrl } from '../src/checks/url.mjs';
-import { toReport } from '../src/report/json.mjs';
-import { toMarkdown } from '../src/report/md.mjs';
-import { auditName, slug } from '../src/lib/audit-name.mjs';
+import { toReport, SCHEMA_VERSION } from '../src/report/json.mjs';
+import { toMarkdown, checkedIds } from '../src/report/md.mjs';
+import { loadConfig, DEFAULT_CONFIG, localToday } from '../src/lib/config.mjs';
 
 const fail = (msg) => { console.error(`proof-triage : ${msg}`); process.exit(2); };
 
 const { values: o } = parseArgs({
   options: {
-    config: { type: 'string', default: join(dirname(fileURLToPath(import.meta.url)), '..', 'proof-triage.config.json') },
+    config: { type: 'string', default: DEFAULT_CONFIG },
     registry: { type: 'string' },
     limit: { type: 'string', default: '20' },
-    today: { type: 'string', default: new Date().toLocaleDateString('sv-SE') },
+    today: { type: 'string', default: localToday() },
     net: { type: 'boolean', default: false },
     explain: { type: 'string' },
     simulate: { type: 'string', multiple: true, default: [] },
+    apply: { type: 'string' },
+    'dry-run': { type: 'boolean', default: false },
   },
 });
 
-if (!existsSync(o.config)) fail(`config introuvable (${o.config}) : copier proof-triage.config.example.json en proof-triage.config.json et l'adapter.`);
-const cfg = JSON.parse(readFileSync(o.config, 'utf8'));
-const root = resolve(dirname(o.config), cfg.root);
-const registry = o.registry ? resolve(o.registry) : resolve(root, cfg.registry);
+let conf;
+try { conf = loadConfig(o.config, o.registry); } catch (e) { fail(e.message); }
+const { cfg, root, registry } = conf;
 const limit = Number(o.limit);
 if (!/^\d{4}-\d{2}-\d{2}$/.test(o.today)) fail(`--today attend AAAA-MM-JJ, reçu « ${o.today} »`);
 if (!Number.isInteger(limit) || limit < 1) fail(`--limit attend un entier positif, reçu « ${o.limit} »`);
+
+if (o.apply) {
+  const reportFile = join(o.apply, 'report.json');
+  const mdFile = join(o.apply, 'triage.md');
+  if (!existsSync(reportFile) || !existsSync(mdFile)) fail(`--apply attend un dossier de tri (report.json + triage.md) : ${o.apply}`);
+  const report = JSON.parse(readFileSync(reportFile, 'utf8'));
+  if (report.meta?.tool !== 'proof-triage' || report.schemaVersion !== SCHEMA_VERSION) fail('report.json n\'est pas un tri proof-triage au schéma attendu');
+  const reg = load(registry);
+  const { ops, skipped } = planApply(report, checkedIds(readFileSync(mdFile, 'utf8')), reg.doc);
+  for (const op of ops) console.log(`${o['dry-run'] ? '(simulation) ' : ''}${op.kind} ${op.id}`);
+  for (const s of skipped) console.log(`ignorée ${s.id} : ${s.reason}`);
+  if (!ops.length) { console.log('rien à appliquer'); process.exit(0); }
+  if (o['dry-run']) process.exit(0);
+  try {
+    const next = ops.reduce((d, op) => applyOp(d, op, { today: o.today }), reg.doc);
+    const r = save(registry, next, { expectHash: reg.hash, backupDir: conf.outDir('backup', o.today), stamp: new Date().toISOString().slice(11, 23).replace(/[:.]/g, '') });
+    console.log(`✓ ${ops.length} décision(s) appliquée(s) · sauvegarde : ${r.backup}`);
+  } catch (e) {
+    fail(e.message);
+  }
+  process.exit(0);
+}
 
 // --simulate kind=state : force l'état de tous les contrôles d'un type (démo du contre-factuel).
 const KINDS = {
@@ -51,6 +76,7 @@ const simulate = o.simulate.map((s) => {
 });
 
 const reg = load(registry);
+const rawById = new Map(reg.doc.tasks.map((t) => [t.id, t]));
 let tasks;
 if (o.explain) {
   const t = reg.byId.get(o.explain);
@@ -75,7 +101,8 @@ for (const t of tasks) {
     for (const k of keys) results[map][k.value] = { state, touches: [] };
   }
   const v = decide(t, c, results, { today: o.today, byId: reg.byId });
-  rows.push({ id: t.id, title: t.title, owner: t.owner, due: t.due, priority: t.priority, status: t.status, ...v });
+  // taskHash : empreinte de la tâche brute, pour que --apply refuse une décision prise sur une version périmée.
+  rows.push({ id: t.id, title: t.title, owner: t.owner, due: t.due, priority: t.priority, status: t.status, taskHash: taskHash(rawById.get(t.id)), ...v });
 }
 
 const meta = {
@@ -93,9 +120,7 @@ if (o.explain) {
   if (o.simulate.length) console.log(`> simulation : ${o.simulate.join(', ')}\n`);
   console.log(toMarkdown(report));
 } else {
-  const window = `top${limit}${o.net ? '-net' : ''}${o.simulate.length ? '-sim' : ''}`;
-  const name = auditName({ tool: 'proof-triage', target: slug(basename(registry, '.json')), window, date: o.today });
-  const dir = join(process.env.AUDIT_DIR || resolve(root, cfg.outDir || 'AUDIT'), name);
+  const dir = conf.outDir(`top${limit}${o.net ? '-net' : ''}${o.simulate.length ? '-sim' : ''}`, o.today);
   mkdirSync(dir, { recursive: true });
   writeFileSync(join(dir, 'report.json'), JSON.stringify(report, null, 2) + '\n');
   writeFileSync(join(dir, 'triage.md'), toMarkdown(report));

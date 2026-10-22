@@ -6,6 +6,9 @@ const KIND = { file: 'fichier', commit: 'commit', url: 'url', blocker: 'blocage'
 /** Une ligne, Markdown et HTML neutralisés. */
 export const esc = (s) => String(s ?? '').replace(/\s*[\r\n]+\s*/g, ' ').replace(/[\\`*_{}[\]()<>#+!|~]/g, '\\$&');
 
+/** Ids des cases cochées par le user. Seule une ligne de tâche (en tête de ligne) compte ; les extraits de notes sont en sous-puce et échappés. */
+export const checkedIds = (md) => [...md.matchAll(/^- \[[xX]\] \*\*((?:\\.|[^*\\])+)\*\*/gm)].map((m) => m[1].replace(/\\(.)/g, '$1'));
+
 const rank = (r) => [ORDER.indexOf(r.verdict) === -1 ? ORDER.length : ORDER.indexOf(r.verdict), CONF[r.confidence] ?? 3];
 const byRank = (a, b) => { const [x, y] = [rank(a), rank(b)]; return x[0] - y[0] || x[1] - y[1]; };
 
