@@ -46,6 +46,21 @@ test('add : tâche todo complète, id unique exigé, champs obligatoires', () =>
   assert.throws(() => applyOp(doc(), { kind: 'add', id: 'd', title: 'D', due: '2026-11-01', owner: 'robot' }, { today: TODAY }), /owner/);
 });
 
+test('reschedule d\'une tâche close → erreur (l\'historique des échéances reste juste)', () => {
+  assert.throws(() => applyOp(doc(), { kind: 'reschedule', id: 'b', due: '2026-11-30' }, { today: TODAY }), /déjà done/);
+});
+
+test('add : priorité P0-P4 seulement, id sans espace ni caractère Markdown (majuscules admises, comme au registre)', () => {
+  const base = { kind: 'add', title: 'T', due: '2026-11-01', owner: 'user' };
+  assert.throws(() => applyOp(doc(), { ...base, id: 'c', priority: 'urgent' }, { today: TODAY }), /priority/);
+  for (const id of ['a b', 'a**b', 'a/b']) assert.throws(() => applyOp(doc(), { ...base, id }, { today: TODAY }), /id/, id);
+  assert.equal(task(applyOp(doc(), { ...base, id: 'kit-1-1-L0', priority: 'P0' }, { today: TODAY }), 'kit-1-1-L0').priority, 'P0');
+});
+
+test('toute opération met à jour le champ updated du registre', () => {
+  assert.equal(applyOp({ ...doc(), updated: '2026-01-01' }, { kind: 'close', id: 'a' }, { today: TODAY }).updated, TODAY);
+});
+
 test('delete : refusé sans confirm, retire la tâche avec confirm', () => {
   assert.throws(() => applyOp(doc(), { kind: 'delete', id: 'a' }, { today: TODAY }), /confirm/);
   assert.equal(applyOp(doc(), { kind: 'delete', id: 'a', confirm: true }, { today: TODAY }).tasks.length, 1);

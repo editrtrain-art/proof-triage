@@ -42,6 +42,12 @@ test('save refuse un document invalide : rien n\'est écrit', () => {
   assert.equal(readFileSync(file, 'utf8'), ORIGINAL);
 });
 
+test('save sans stamp fourni : horodatage calculé, nom <registre>-<HHMMSSmmm>.json', () => {
+  const { doc, hash } = load(file);
+  const r = save(file, applyOp(doc, { kind: 'close', id: 'a' }, { today: '2026-10-22' }), { expectHash: hash, backupDir: backups });
+  assert.match(r.backup, /ops-tasks-\d{9}\.json$/);
+});
+
 test('load expose le document brut (non normalisé) pour l\'écriture', () => {
   const { doc, byId } = load(file);
   assert.equal(doc.tasks[0].priority, undefined);

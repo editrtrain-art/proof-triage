@@ -1,5 +1,5 @@
 // Affirmations vérifiables d'une tâche. PUR : n'exécute rien, ne lit rien, garde l'extrait source.
-import { DELIVERY, DELIVERY_UPPER, NEGATION, BLOCKERS, OBSOLETE, CONDITION, URL, ONLINE, PATH, PATH_TAIL, SHA, COMMIT_WORD, SHA256_BEFORE, LINK, DATE } from './patterns.mjs';
+import { DELIVERY, DELIVERY_UPPER, NEGATION, BLOCKERS, OBSOLETE, CONDITION, URL, ONLINE, TO_DO_BEFORE, PATH, PATH_TAIL, SHA, COMMIT_WORD, SHA256_BEFORE, LINK, DATE } from './patterns.mjs';
 
 const SNIPPET = 160;
 const snip = (s) => s.trim().slice(0, SNIPPET);
@@ -32,8 +32,9 @@ function datesIn(text, year) {
   }).filter((x) => /^\d{4}-(0[1-9]|1[0-2])-(0[1-9]|[12]\d|3[01])$/.test(x.iso));
 }
 
-const delivers = (s) => [...s.matchAll(DELIVERY), ...s.matchAll(DELIVERY_UPPER)]
-  .some((m) => !NEGATION.test(s.slice(Math.max(0, m.index - 24), m.index)));
+const before = (s, m) => s.slice(Math.max(0, m.index - 24), m.index);
+const delivers = (s) => [...s.matchAll(DELIVERY), ...s.matchAll(DELIVERY_UPPER)].some((m) => !NEGATION.test(before(s, m)));
+const online = (s) => [...s.matchAll(ONLINE)].some((m) => !NEGATION.test(before(s, m)) && !TO_DO_BEFORE.test(before(s, m)));
 
 const addDays =(iso, n) => new Date(Date.parse(iso) + n * 86400000).toISOString().slice(0, 10);
 
@@ -52,7 +53,7 @@ export function claims(task) {
       const snippet = snip(s);
       const role = delivers(s) ? 'deliverable' : 'mention';
       for (const p of pathsIn(s)) out.paths.push({ value: p, role, snippet });
-      const urlRole = role === 'deliverable' || ONLINE.test(s) ? 'deliverable' : 'mention';
+      const urlRole = role === 'deliverable' || online(s) ? 'deliverable' : 'mention';
       for (const u of s.match(URL) || []) out.urls.push({ value: u.replace(/[.,;:!?]+$/, ''), role: urlRole, snippet });
       const bare = s.replace(URL, ' ');
       const shaRole = COMMIT_WORD.test(bare) ? 'commit' : 'hex';

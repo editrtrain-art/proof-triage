@@ -20,7 +20,7 @@ export function toMarkdown({ meta, rows }) {
     '',
     ORDER.filter((v) => meta.counts[v]).map((v) => `${v} : ${meta.counts[v]}`).join(' · '),
     '',
-    'Rien n\'est écrit dans le registre. Chaque verdict se valide ou se refuse à la main.',
+    'Le tri n\'a rien écrit dans le registre. Cocher `[x]` une ligne valide sa décision ; `triage --apply <ce dossier>` n\'applique ensuite que clore (→ done) et sans-objet (→ cancelled), après sauvegarde, et jamais sur une tâche modifiée depuis le tri.',
   ];
   let current;
   for (const r of [...rows].sort(byRank)) {

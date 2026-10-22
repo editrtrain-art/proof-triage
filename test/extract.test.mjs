@@ -97,6 +97,12 @@ test('URL : rôle deliverable si la phrase dit une livraison ou « en ligne », 
   assert.deepEqual(c.urls.map((u) => [u.value, u.role]), [['https://ex.com/a', 'deliverable'], ['https://ex.com/b', 'deliverable'], ['http://ex.com/c', 'mention']]);
 });
 
+test('URL : « pas encore en ligne » et « à mettre en ligne » ne livrent rien ; « mis en ligne » livre', () => {
+  assert.equal(claims(task('Pas encore en ligne sur https://ex.com/a')).urls[0].role, 'mention');
+  assert.equal(claims(task('À mettre en ligne sur https://ex.com/a')).urls[0].role, 'mention');
+  assert.equal(claims(task('Mis en ligne sur https://ex.com/a')).urls[0].role, 'deliverable');
+});
+
 test('URL extraites sans ponctuation finale, dédoublonnées', () => {
   const c = claims(task('En ligne sur https://example.com/page. Revoir https://example.com/page'));
   assert.deepEqual(values(c.urls), ['https://example.com/page']);

@@ -40,6 +40,13 @@ test('triage.md : en-tête avec date, décompte, empreinte courte, réseau', () 
   assert.match(md, /réseau : coupé/);
 });
 
+test('triage.md : l\'en-tête dit ce que --apply fera des cases cochées (ce fichier pilote une écriture)', () => {
+  const md = toMarkdown(toReport([row('a', 'clore', 'haute')], META));
+  assert.doesNotMatch(md, /Rien n'est écrit dans le registre/);
+  assert.match(md, /--apply/);
+  assert.match(md, /clore.*done.*sans-objet.*cancelled/);
+});
+
 test('triage.md : chaque preuve en trois temps (extrait → contrôle → résultat)', () => {
   const ev = [{ kind: 'file', value: 'docs/a.md', snippet: 'Rapport écrit : docs/a.md', state: 'present', detail: 'deliverable' }];
   const md = toMarkdown(toReport([row('a', 'clore', 'haute', { evidence: ev })], META));

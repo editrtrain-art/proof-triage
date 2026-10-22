@@ -47,6 +47,7 @@ if (o.apply) {
   if (!existsSync(reportFile) || !existsSync(mdFile)) fail(`--apply attend un dossier de tri (report.json + triage.md) : ${o.apply}`);
   const report = JSON.parse(readFileSync(reportFile, 'utf8'));
   if (report.meta?.tool !== 'proof-triage' || report.schemaVersion !== SCHEMA_VERSION) fail('report.json n\'est pas un tri proof-triage au schéma attendu');
+  if (report.meta.simulate?.length) fail(`ce tri a été produit avec --simulate (${report.meta.simulate.join(', ')}) : preuves fictives, --apply refusé`);
   const reg = load(registry);
   const { ops, skipped } = planApply(report, checkedIds(readFileSync(mdFile, 'utf8')), reg.doc);
   for (const op of ops) console.log(`${o['dry-run'] ? '(simulation) ' : ''}${op.kind} ${op.id}`);
@@ -55,7 +56,7 @@ if (o.apply) {
   if (o['dry-run']) process.exit(0);
   try {
     const next = ops.reduce((d, op) => applyOp(d, op, { today: o.today }), reg.doc);
-    const r = save(registry, next, { expectHash: reg.hash, backupDir: conf.outDir('backup', o.today), stamp: new Date().toISOString().slice(11, 23).replace(/[:.]/g, '') });
+    const r = save(registry, next, { expectHash: reg.hash, backupDir: conf.outDir('backup', o.today) });
     console.log(`✓ ${ops.length} décision(s) appliquée(s) · sauvegarde : ${r.backup}`);
   } catch (e) {
     fail(e.message);

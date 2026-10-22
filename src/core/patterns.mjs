@@ -35,7 +35,9 @@ export const CONDITION = /(?<!\p{L})(J\+(\d+)|sinon|fen[êe]tres?|expir\p{L}*)(?
 
 export const URL = /https?:\/\/[^\s<>"'`»)\]]+/g;
 // Une URL ne prouve une livraison que dans une phrase de livraison, ou « en ligne sur … ».
-export const ONLINE = /(?<!\p{L})en ligne(?!\p{L})/iu;
+// Comme un verbe de livraison, « en ligne » se nie (« pas encore en ligne ») ; « à mettre en ligne » est un projet, pas une livraison.
+export const ONLINE = /(?<!\p{L})en ligne(?!\p{L})/giu;
+export const TO_DO_BEFORE = /mettre\s*$/i;
 // Relatif à la racine, ou absolu / ../ (extraits pour que le contrôle les REFUSE). Routes /x/y exclues.
 export const PATH = /(?<![\w/:.@\\-])(?:[A-Za-z]:\/)?(?:\.{1,2}\/)*\.?[\w@][\w.@-]*(?:\/[\w.@-]+)+\/?/g;
 export const PATH_TAIL = /(?:\.[A-Za-z][A-Za-z0-9]{0,5}|\/)$/;

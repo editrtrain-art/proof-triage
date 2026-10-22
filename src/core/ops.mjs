@@ -6,6 +6,9 @@ import { createHash } from 'node:crypto';
 const ISO = /^\d{4}-\d{2}-\d{2}$/;
 export const STATUSES = ['todo', 'doing', 'open', 'parked', 'done', 'cancelled'];
 const OWNERS = ['claude', 'user'];
+const PRIORITIES = ['P0', 'P1', 'P2', 'P3', 'P4'];
+// Forme des ids relevée au registre (majuscules admises : kit-1-1-L0) ; jamais d'espace ni de caractère Markdown.
+const ID = /^[A-Za-z0-9][A-Za-z0-9-]*$/;
 const CLOSED = ['done', 'cancelled'];
 
 /** Empreinte d'une tâche telle qu'elle est dans le fichier : sert à refuser une décision prise sur une version périmée. */
@@ -16,21 +19,25 @@ const withNote = (notes, note, today) => (!note ? notes : notes ? `${notes} · $
 
 export function applyOp(doc, op, { today }) {
   const d = structuredClone(doc);
+  d.updated = today;
   const i = d.tasks.findIndex((t) => t.id === op.id);
   if (op.kind === 'add') {
     if (i !== -1) throw new Error(`la tâche ${op.id} existe déjà`);
     for (const k of ['id', 'title']) if (!op[k]) throw new Error(`add : ${k} manquant`);
+    if (!ID.test(op.id)) throw new Error('add : id attendu en lettres, chiffres et tirets');
     if (!ISO.test(op.due || '')) throw new Error('add : due attendu en AAAA-MM-JJ');
     if (!OWNERS.includes(op.owner)) throw new Error(`add : owner attendu ${OWNERS.join('|')}`);
-    d.tasks.push({ id: op.id, title: op.title, due: op.due, owner: op.owner, status: 'todo', priority: op.priority || 'P2', source: op.source || '', tags: op.tags || [], notes: op.notes || '', doneDate: null });
+    const priority = op.priority || 'P2';
+    if (!PRIORITIES.includes(priority)) throw new Error(`add : priority attendu ${PRIORITIES.join('|')}`);
+    d.tasks.push({ id: op.id, title: op.title, due: op.due, owner: op.owner, status: 'todo', priority, source: op.source || '', tags: op.tags || [], notes: op.notes || '', doneDate: null });
     return d;
   }
   if (i === -1) throw new Error(`tâche inconnue : ${op.id}`);
   const t = d.tasks[i];
+  if (['close', 'cancel', 'reschedule'].includes(op.kind) && CLOSED.includes(t.status)) throw new Error(`${op.id} est déjà ${t.status}`);
   switch (op.kind) {
     case 'close':
     case 'cancel':
-      if (CLOSED.includes(t.status)) throw new Error(`${op.id} est déjà ${t.status}`);
       t.status = op.kind === 'close' ? 'done' : 'cancelled';
       t.doneDate = today;
       t.notes = withNote(t.notes || '', op.note, today);

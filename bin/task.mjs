@@ -44,7 +44,7 @@ const op = { kind, id, note: o.note, due: o.due, title: o.title, owner: o.owner,
   tags: o.tags?.split(',').map((t) => t.trim()).filter(Boolean) };
 try {
   const next = applyOp(reg.doc, op, { today: o.today });
-  const r = save(conf.registry, next, { expectHash: reg.hash, backupDir: conf.outDir('backup', o.today), stamp: new Date().toISOString().slice(11, 23).replace(/[:.]/g, '') });
+  const r = save(conf.registry, next, { expectHash: reg.hash, backupDir: conf.outDir('backup', o.today) });
   console.log(`✓ ${kind} ${id} · sauvegarde : ${r.backup}`);
 } catch (e) {
   fail(e.message);

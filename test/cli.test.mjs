@@ -131,6 +131,18 @@ test('--apply : dry-run sans écriture, puis seules les cases cochées clore/san
   assert.equal(readdirSync(join(audit, 'proof-triage-registry-backup-2026-10-22')).length, 1);
 });
 
+test('--apply refuse un tri produit avec --simulate (des preuves fictives ne ferment rien)', () => {
+  assert.equal(cli('--limit', '100', '--simulate', 'commit=found').status, 0);
+  const dir = join(audit, 'proof-triage-registry-top100-sim-2026-10-22');
+  const md = join(dir, 'triage.md');
+  writeFileSync(md, readFileSync(md, 'utf8').replace(/^- \[ \]/gm, '- [x]'));
+  const before = readFileSync(registry, 'utf8');
+  const r = cli('--apply', dir);
+  assert.equal(r.status, 2);
+  assert.match(r.stderr, /simul/);
+  assert.equal(readFileSync(registry, 'utf8'), before);
+});
+
 test('--explain sur un id inconnu, --simulate mal formé, config absente → code 2 et message', () => {
   assert.equal(cli('--explain', 'nope').status, 2);
   assert.equal(cli('--explain', 'a-clore-haute', '--simulate', 'commit').status, 2);
