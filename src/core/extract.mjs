@@ -1,5 +1,5 @@
 // Affirmations vérifiables d'une tâche. PUR : n'exécute rien, ne lit rien, garde l'extrait source.
-import { DELIVERY, NEGATION, BLOCKERS, OBSOLETE, CONDITION, URL, PATH, PATH_TAIL, SHA, LINK, DATE } from './patterns.mjs';
+import { DELIVERY, NEGATION, BLOCKERS, OBSOLETE, CONDITION, URL, PATH, PATH_TAIL, SHA, COMMIT_WORD, SHA256_BEFORE, LINK, DATE } from './patterns.mjs';
 
 const SNIPPET = 160;
 const snip = (s) => s.trim().slice(0, SNIPPET);
@@ -53,7 +53,11 @@ export function claims(task) {
       for (const p of pathsIn(s)) out.paths.push({ value: p, role, snippet });
       for (const u of s.match(URL) || []) out.urls.push({ value: u.replace(/[.,;:!?]+$/, ''), role: 'url', snippet });
       const bare = s.replace(URL, ' ');
-      for (const h of bare.match(SHA) || []) if (/\d/.test(h) && /[a-f]/.test(h)) out.shas.push({ value: h, role: 'commit', snippet });
+      const shaRole = COMMIT_WORD.test(bare) ? 'commit' : 'hex';
+      for (const m of bare.matchAll(SHA)) {
+        const h = m[0];
+        if (/\d/.test(h) && /[a-f]/.test(h) && !SHA256_BEFORE.test(bare.slice(Math.max(0, m.index - 12), m.index))) out.shas.push({ value: h, role: shaRole, snippet });
+      }
       for (const l of bare.match(LINK) || []) if (/[a-z]/.test(l) && l !== task.id) out.links.push({ value: l, role: 'link', snippet });
       const b = BLOCKERS.find((re) => re.test(s));
       if (b) out.blockers.push({ value: s.match(b)[0], role: 'blocker', snippet });

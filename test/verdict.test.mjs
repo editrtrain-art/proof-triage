@@ -32,6 +32,14 @@ test('ligne 0 : URL citée gone → à-vérifier (contradiction)', () => {
   assert.ok(v.flags.includes('contradiction'));
 });
 
+test('hexa sans le mot commit, absent → ignoré (pas de contradiction) ; trouvé → compte', () => {
+  const absent = run({ notes: 'Alerte 1a1322e21f94bbe2 reçue.' }, { commits: { '1a1322e21f94bbe2': { state: 'absent', touches: [] } } });
+  assert.ok(!absent.flags.includes('contradiction'));
+  assert.ok(!absent.evidence.some((e) => e.kind === 'commit'));
+  const found = run({ notes: 'Rapport produit : docs/a.md (correctif abc1234).' }, { files: present, commits: touching });
+  assert.deepEqual([found.verdict, found.confidence], ['clore', 'haute']);
+});
+
 test('ligne 1 : migratedTo renseigné → sans-objet, moyenne', () => {
   const v = run({ migratedTo: 'autre/registre.json', notes: '' });
   assert.deepEqual([v.verdict, v.confidence], ['sans-objet', 'moyenne']);

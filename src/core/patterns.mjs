@@ -33,5 +33,8 @@ export const URL = /https?:\/\/[^\s<>"'`»)\]]+/g;
 export const PATH = /(?<![\w/:.@\\-])(?:[A-Za-z]:\/)?(?:\.{1,2}\/)*\.?[\w@][\w.@-]*(?:\/[\w.@-]+)+\/?/g;
 export const PATH_TAIL = /(?:\.[A-Za-z][A-Za-z0-9]{0,5}|\/)$/;
 export const SHA = /(?<![#\w./-])[0-9a-f]{7,40}(?![\w/-])(?!\.\w)/g;
+// Un hexa ne vaut « commit » que si la phrase le dit ; sinon c'est un « hex » (alerte, empreinte, version) qui ne compte que si git le trouve.
+export const COMMIT_WORD = /(?<!\p{L})(?:commit\p{L}*|pouss[ée]\p{L}*)(?!\p{L})/iu;
+export const SHA256_BEFORE = /sha-?256\W{0,3}$/i;
 export const LINK = /(?<![\w/.@-])[a-z0-9]+(?:-[a-z0-9]+){2,}(?![\w/@-])(?!\.\w)/g;
 export const DATE = /(?<![\d/])(?:(\d{4})-(\d{2})-(\d{2})|(\d{1,2})\/(\d{1,2})(?:\/(\d{4}))?)(?![\d/])/g;

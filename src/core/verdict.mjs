@@ -4,10 +4,12 @@
 const get = (map, k) => map?.[k] || { state: 'unchecked' };
 const quote = (s) => `« ${s} »`;
 
-export function decide(task, c, results, { today, byId = new Map() }) {
+export function decide(task, claimsIn, results, { today, byId = new Map() }) {
   const file = (v) => get(results.files, v);
   const commit = (v) => get(results.commits, v);
   const url = (v) => get(results.urls, v);
+  // Un « hex » (hexa sans le mot commit) introuvable n'était pas un commit : on l'oublie.
+  const c = { ...claimsIn, shas: claimsIn.shas.filter((s) => s.role === 'commit' || commit(s.value).state === 'found') };
 
   const evidence = [
     ...c.paths.map((p) => ({ kind: 'file', value: p.value, snippet: p.snippet, state: file(p.value).state, detail: p.role })),

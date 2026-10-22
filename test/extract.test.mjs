@@ -67,6 +67,11 @@ test('SHA : hexa 7-40 avec chiffre ET lettre, hors couleur, hors nom de fichier'
   assert.deepEqual(values(c.shas), ['8f1c590', 'deadbee1']);
 });
 
+test('SHA : rôle commit si la phrase dit commit/commité/poussé, sinon hex ; préfixe sha256 exclu', () => {
+  const c = claims(task('Archive sha256 4f21b733… prête, commit abc1234. Alerte 1a1322e21f94bbe2 reçue. COMMITÉ ET POUSSÉ (2443bbd).'));
+  assert.deepEqual(c.shas.map((s) => [s.value, s.role]), [['abc1234', 'commit'], ['1a1322e21f94bbe2', 'hex'], ['2443bbd', 'commit']]);
+});
+
 test('URL extraites sans ponctuation finale, dédoublonnées', () => {
   const c = claims(task('En ligne sur https://example.com/page. Revoir https://example.com/page'));
   assert.deepEqual(values(c.urls), ['https://example.com/page']);
