@@ -14,6 +14,8 @@ node bin/triage.mjs --explain <task-id> --simulate commit=absent   # counterfact
 node --test
 ```
 
+Static demo: `node bin/demo.mjs` runs the real pipeline on a synthetic registry and writes `demo/index.html` (one self-contained page, no script, no external request, no exact date). `vercel.json` publishes that folder only; CI fails if the committed page is stale.
+
 Registry formats (v0.3), detected from the file or forced with `--format` (or `"format"` in the config):
 
 | Format | File | Mapping |

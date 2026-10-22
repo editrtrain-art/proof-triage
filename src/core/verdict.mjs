@@ -16,7 +16,7 @@ export function decide(task, claimsIn, results, { today, byId = new Map() }) {
     ...c.paths.map((p) => ({ kind: 'file', value: p.value, snippet: p.snippet, state: file(p.value).state, detail: p.role })),
     ...c.shas.map((s) => {
       const r = commit(s.value);
-      return { kind: 'commit', value: s.value, snippet: s.snippet, state: r.state, detail: r.repo ? `${r.repo} ; touche : ${r.touches?.join(', ') || 'aucun livrable cité'}` : r.reason || '' };
+      return { kind: 'commit', value: s.value, snippet: s.snippet, state: r.state, detail: r.repo ? `${r.repo === '.' ? '' : `${r.repo} ; `}touche : ${r.touches?.join(', ') || 'aucun livrable cité'}` : r.reason || '' };
     }),
     ...c.urls.map((u) => ({ kind: 'url', value: u.value, snippet: u.snippet, state: url(u.value).state, detail: [u.role, url(u.value).status && `HTTP ${url(u.value).status}`].filter(Boolean).join(' · ') })),
     ...c.blockers.map((b) => ({ kind: 'blocker', value: b.value, snippet: b.snippet, state: 'cité', detail: '' })),

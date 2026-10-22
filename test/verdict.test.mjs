@@ -202,6 +202,11 @@ test('chaque preuve garde extrait → contrôle → résultat', () => {
   assert.match(c.detail, /site.*docs\/a\.md/);
 });
 
+test('détail d\'un commit trouvé dans le dépôt racine (.) : pas de « . ; » en tête', () => {
+  const v = run({ notes: 'Rapport écrit : docs/a.md, commit abc1234.' }, { files: present, commits: { abc1234: { state: 'found', repo: '.', touches: ['docs/a.md'] } } });
+  assert.equal(v.evidence.find((e) => e.kind === 'commit').detail, 'touche : docs/a.md');
+});
+
 test('contrôle non lancé (URL sans --net) → état unchecked, jamais une preuve', () => {
   const v = run({ notes: 'Page publiée : docs/a.md sur https://ex.com/p' }, { files: present });
   assert.equal(v.evidence.find((e) => e.kind === 'url').state, 'unchecked');

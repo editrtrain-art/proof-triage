@@ -47,6 +47,8 @@ src/lib/        config locale, convention de nommage des sorties
 | `src/core/verdict.mjs` | `decide(task, claims, results, {today, byId})` → `{verdict, confidence, flags, evidence, why, suggestion}` |
 | `src/core/ops.mjs` | `applyOp(doc, op, {today})` → nouveau document (`add`, `close`, `cancel`, `reschedule`, `reassign`, `delete` avec `confirm`) ; `validate(doc)` ; `taskHash(task)` |
 | `src/core/apply.mjs` | `planApply(report, ids, doc)` → `{ops, skipped}` |
+| `src/run.mjs` | `triageTasks(tasks, reg, {root, repos, refuseSegments, today, net, simulate})` → lignes du rapport : la boucle affirmations → contrôles → verdict, partagée par le CLI et la démo |
+| `src/report/html.mjs`, `bin/demo.mjs` | `toHtml({report, replay})` : page autonome (CSS en ligne, aucun script, aucune ressource externe, texte échappé, retards en jours sans date) ; `bin/demo.mjs` lance le vrai pipeline sur `test/fixtures/demo-registry.json` dans une racine jetable aux commits datés à l'identique (SHA stables) et écrit `demo/index.html`, seul dossier publié (`vercel.json`) |
 | `src/report/json.mjs`, `md.mjs` | `toReport(rows, meta)` (`schemaVersion: 1`, `meta.tool`, `meta.counts`, `meta.suggestions`) ; `toMarkdown(report)` ; `checkedIds(md)` |
 | `src/lib/config.mjs` | `loadConfig(path, registry?)` → `{cfg, root, registry, outDir(window, date), pruneBackups(today)}` |
 
@@ -109,5 +111,5 @@ Un tour du user accompli (« validé par le user », « geste user fait ») annu
 
 ## 8. Feuille de route
 - **v0.1** tri seul · **v0.2** écriture (`task`, `--apply`), suggestions, panneau de tableau de bord (livrées).
-- **v0.3** (en cours) : adaptateurs de registre Markdown et GitHub Issues, en lecture seule (livrés) ; résumé LLM des notes longues (résume, ne décide jamais) ; démo web statique générée à partir de la fixture synthétique seulement.
+- **v0.3** (en cours) : adaptateurs de registre Markdown et GitHub Issues, en lecture seule (livrés) ; démo web statique générée à partir de la fixture synthétique seulement (livrée) ; résumé LLM des notes longues (résume, ne décide jamais).
 - Reporté : lecture du contenu des fichiers, conséquences orphelines croisées sur tout le registre, levée automatique d'un blocage quand sa pièce existe.

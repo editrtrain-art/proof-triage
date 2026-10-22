@@ -1,0 +1,214 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>proof-triage demo</title>
+<meta name="description" content="Triage overdue tasks on evidence a machine can check. Demo on synthetic data.">
+<style>
+:root{--bg:#F2F4F7;--surface:#FFFFFF;--ink:#16212F;--muted:#566173;--rule:#D3D9E1;--close:#1E6B4E;--drop:#6B7280;--blocked:#9C6212;--check:#3B5A85;--resched:#7A4A7C;--focus:#3B5A85}
+@media (prefers-color-scheme:dark){:root{--bg:#121820;--surface:#1A222D;--ink:#E6EBF1;--muted:#9AA6B5;--rule:#2C3743;--close:#5DBA94;--drop:#9CA3AF;--blocked:#D9A050;--check:#86A8D8;--resched:#C493C6;--focus:#86A8D8}}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.55 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif}
+main{max-width:46rem;margin:0 auto;padding:2.5rem 1rem 4rem}
+h1,h2,h3{font-family:Charter,"Bitstream Charter","Sitka Text",Cambria,Georgia,serif;font-weight:700;line-height:1.2;margin:0}
+h1{font-size:2.6rem;letter-spacing:-.01em}
+h2{font-size:1.6rem;margin:2.75rem 0 .5rem}
+h3{font-size:1.2rem;margin:2rem 0 .25rem;display:flex;align-items:baseline;gap:.5rem}
+p{margin:.5rem 0}
+.lede{font-size:1.15rem;color:var(--muted);max-width:36rem}
+code{font-family:ui-monospace,"Cascadia Mono",Consolas,monospace;font-size:.88em;overflow-wrap:anywhere}
+.sub,.meta,.gloss,.detail,.none,.cmd{color:var(--muted)}
+.gloss{font-family:system-ui,sans-serif;font-weight:400;font-size:.9rem}
+[data-verdict="clore"]{--v:var(--close)}[data-verdict="sans-objet"]{--v:var(--drop)}[data-verdict="bloquée-user"]{--v:var(--blocked)}[data-verdict="à-vérifier"]{--v:var(--check)}[data-verdict="replanifier"]{--v:var(--resched)}
+.badge{display:inline-block;border:2px solid var(--v);color:var(--v);border-radius:.4rem;padding:.1rem .55rem;font-weight:700}
+.badge .gloss{color:var(--v)}
+.card{background:var(--surface);border-left:6px solid var(--v);border-radius:0 .5rem .5rem 0;padding:1rem 1.1rem;margin:.75rem 0}
+.task .title{font-weight:650}
+.why{font-size:1.02rem}
+.flag{display:inline-block;border:1px solid var(--rule);border-radius:1rem;padding:0 .55rem;font-size:.85rem;color:var(--muted)}
+.suggestion{border-top:1px dashed var(--rule);padding-top:.5rem}
+.chain{width:100%;border-collapse:collapse;margin-top:.75rem;font-size:.92rem}
+.chain th{text-align:left;font-weight:600;color:var(--muted);border-bottom:1px solid var(--rule);padding:.3rem .5rem .3rem 0}
+.chain td{vertical-align:top;border-bottom:1px solid var(--rule);padding:.45rem .5rem .45rem 0}
+.quote{font-style:italic;max-width:18rem}
+.quote::before{content:"\201C"}.quote::after{content:"\201D"}
+.state{font-weight:700}
+.state[data-state="present"],.state[data-state="found"],.state[data-state="ok"]{color:var(--close)}
+.state[data-state="absent"],.state[data-state="gone"],.state[data-state="refused"],.state[data-state="error"]{color:var(--blocked)}
+.replay input{position:absolute;opacity:0}
+.replay label{display:inline-block;margin:.5rem .5rem 0 0;padding:.45rem .9rem;border:2px solid var(--ink);border-radius:2rem;cursor:pointer;font-weight:600}
+.replay input:checked+label{background:var(--ink);color:var(--bg)}
+.replay input:focus-visible+label{outline:3px solid var(--focus);outline-offset:2px}
+.state-sim{display:none}
+#missing:checked~.states .state-real{display:none}
+#missing:checked~.states .state-sim{display:block}
+.bar{display:flex;height:1.4rem;border-radius:.35rem;overflow:hidden;margin:1rem 0 .5rem}
+.bar span{background:var(--v)}
+.legend{list-style:none;padding:0;margin:0;display:flex;flex-wrap:wrap;gap:.35rem 1.25rem}
+.swatch{display:inline-block;width:.8rem;height:.8rem;border-radius:.2rem;background:var(--v);margin-right:.4rem}
+details{border-bottom:1px solid var(--rule)}
+summary{cursor:pointer;padding:.6rem 0}
+summary:focus-visible{outline:3px solid var(--focus);outline-offset:2px}
+.rules{width:100%;border-collapse:collapse;font-size:.92rem}
+.rules th,.rules td{text-align:left;vertical-align:top;border-bottom:1px solid var(--rule);padding:.45rem .6rem .45rem 0}
+footer{margin-top:3rem;border-top:1px solid var(--rule);padding-top:1rem;color:var(--muted);font-size:.92rem}
+a{color:var(--check)}
+@media (max-width:40rem){h1{font-size:2rem}.chain thead{display:none}.chain tr{display:block;padding:.4rem 0;border-bottom:1px solid var(--rule)}.chain td{display:block;border:0;padding:.1rem 0}}
+</style></head><body><main>
+<header>
+  <h1>proof-triage</h1>
+  <p class="lede">Closes an overdue backlog on evidence a machine can check, not on age: a delivered file, a commit that touches it, a URL that answers.</p>
+</header>
+<section class="replay" aria-labelledby="replay-h">
+  <h2 id="replay-h">One verdict, replayed</h2>
+  <p>Every verdict comes from a fixed table of rules applied to checks anyone can rerun. Change one piece of evidence and the verdict changes with it.</p>
+  <input type="radio" name="replay" id="as-is" checked><label for="as-is">As checked</label>
+  <input type="radio" name="replay" id="missing"><label for="missing">Pretend the commit is missing</label>
+  <div class="states">
+    <div class="state-real"><div class="card" data-verdict="clore">
+    <p class="task"><span class="title">Écrire le guide d&#39;installation</span> <span class="meta">claude, overdue 51 days</span></p>
+    <p><span class="badge" data-verdict="clore">clore <span class="gloss">close, high confidence</span></span></p>
+    <p class="why">Livrable docs/guide.md présent et touché par un commit trouvé.</p>
+    <table class="chain"><thead><tr><th scope="col">The note says</th><th scope="col">Checked</th><th scope="col">Result</th></tr></thead><tbody>
+    <tr><td class="quote">Guide écrit : docs/guide.md, commit 62e0fc3817.</td><td>file <code>docs/guide.md</code></td><td><span class="state" data-state="present">present</span> <span class="detail">deliverable</span></td></tr>
+    <tr><td class="quote">Guide écrit : docs/guide.md, commit 62e0fc3817.</td><td>commit <code>62e0fc3817</code></td><td><span class="state" data-state="found">found</span> <span class="detail">touche : docs/guide.md</span></td></tr>
+  </tbody></table>
+  </div></div>
+    <div class="state-sim"><div class="card" data-verdict="à-vérifier">
+    <p class="task"><span class="title">Écrire le guide d&#39;installation</span> <span class="meta">claude, overdue 51 days</span></p>
+    <p><span class="badge" data-verdict="à-vérifier">à-vérifier <span class="gloss">check by hand</span></span></p>
+    <p class="why">Commit cité 62e0fc3817 introuvable dans les dépôts.</p><p class="flags"><span class="flag">contradiction</span></p>
+    <table class="chain"><thead><tr><th scope="col">The note says</th><th scope="col">Checked</th><th scope="col">Result</th></tr></thead><tbody>
+    <tr><td class="quote">Guide écrit : docs/guide.md, commit 62e0fc3817.</td><td>file <code>docs/guide.md</code></td><td><span class="state" data-state="present">present</span> <span class="detail">deliverable</span></td></tr>
+    <tr><td class="quote">Guide écrit : docs/guide.md, commit 62e0fc3817.</td><td>commit <code>62e0fc3817</code></td><td><span class="state" data-state="absent">absent</span></td></tr>
+  </tbody></table>
+  </div><p class="cmd">Same as <code>node bin/triage.mjs --explain guide-installation --simulate commit=absent</code></p></div>
+  </div>
+</section>
+<section aria-labelledby="all-h">
+  <h2 id="all-h">The whole triage</h2>
+  <div class="bar" role="img" aria-label="2 clore, 1 sans-objet, 2 bloquée-user, 5 à-vérifier, 1 replanifier"><span data-verdict="clore" style="flex-grow:2"></span><span data-verdict="sans-objet" style="flex-grow:1"></span><span data-verdict="bloquée-user" style="flex-grow:2"></span><span data-verdict="à-vérifier" style="flex-grow:5"></span><span data-verdict="replanifier" style="flex-grow:1"></span></div>
+  <ul class="legend"><li><span class="swatch" data-verdict="clore"></span>2 clore <span class="gloss">close</span></li><li><span class="swatch" data-verdict="sans-objet"></span>1 sans-objet <span class="gloss">drop</span></li><li><span class="swatch" data-verdict="bloquée-user"></span>2 bloquée-user <span class="gloss">blocked on a person</span></li><li><span class="swatch" data-verdict="à-vérifier"></span>5 à-vérifier <span class="gloss">check by hand</span></li><li><span class="swatch" data-verdict="replanifier"></span>1 replanifier <span class="gloss">reschedule</span></li></ul>
+  <p class="sub">11 overdue tasks triaged. Nothing was written to the registry: a person ticks the decisions, then <code>--apply</code> closes or drops only those.</p>
+  
+  <section class="group" aria-labelledby="g-clore">
+    <h3 id="g-clore"><span class="swatch" data-verdict="clore"></span>clore <span class="gloss">close</span></h3>
+    <p class="sub">The evidence says it is done.</p>
+    <details><summary><span class="title">Écrire le guide d&#39;installation</span> <span class="meta">claude, overdue 51 days</span></summary><div class="card" data-verdict="clore">
+    <p class="task"><span class="title">Écrire le guide d&#39;installation</span> <span class="meta">claude, overdue 51 days</span></p>
+    <p><span class="badge" data-verdict="clore">clore <span class="gloss">close, high confidence</span></span></p>
+    <p class="why">Livrable docs/guide.md présent et touché par un commit trouvé.</p>
+    <table class="chain"><thead><tr><th scope="col">The note says</th><th scope="col">Checked</th><th scope="col">Result</th></tr></thead><tbody>
+    <tr><td class="quote">Guide écrit : docs/guide.md, commit 62e0fc3817.</td><td>file <code>docs/guide.md</code></td><td><span class="state" data-state="present">present</span> <span class="detail">deliverable</span></td></tr>
+    <tr><td class="quote">Guide écrit : docs/guide.md, commit 62e0fc3817.</td><td>commit <code>62e0fc3817</code></td><td><span class="state" data-state="found">found</span> <span class="detail">touche : docs/guide.md</span></td></tr>
+  </tbody></table>
+  </div></details><details><summary><span class="title">Publier la note de version</span> <span class="meta">claude, overdue 44 days</span></summary><div class="card" data-verdict="clore">
+    <p class="task"><span class="title">Publier la note de version</span> <span class="meta">claude, overdue 44 days</span></p>
+    <p><span class="badge" data-verdict="clore">clore <span class="gloss">close, medium confidence</span></span></p>
+    <p class="why">Livrable docs/release.md présent ; commit trouvé sans lien au chemin.</p>
+    <table class="chain"><thead><tr><th scope="col">The note says</th><th scope="col">Checked</th><th scope="col">Result</th></tr></thead><tbody>
+    <tr><td class="quote">Note de version écrite : docs/release.md (commit 63befbe408).</td><td>file <code>docs/release.md</code></td><td><span class="state" data-state="present">present</span> <span class="detail">deliverable</span></td></tr>
+    <tr><td class="quote">Note de version écrite : docs/release.md (commit 63befbe408).</td><td>commit <code>63befbe408</code></td><td><span class="state" data-state="found">found</span> <span class="detail">touche : aucun livrable cité</span></td></tr>
+  </tbody></table>
+  </div></details>
+  </section>
+  <section class="group" aria-labelledby="g-sans-objet">
+    <h3 id="g-sans-objet"><span class="swatch" data-verdict="sans-objet"></span>sans-objet <span class="gloss">drop</span></h3>
+    <p class="sub">Replaced or cancelled in writing.</p>
+    <details><summary><span class="title">Ancienne migration de la base</span> <span class="meta">claude, overdue 58 days</span></summary><div class="card" data-verdict="sans-objet">
+    <p class="task"><span class="title">Ancienne migration de la base</span> <span class="meta">claude, overdue 58 days</span></p>
+    <p><span class="badge" data-verdict="sans-objet">sans-objet <span class="gloss">drop, medium confidence</span></span></p>
+    <p class="why">Formule explicite « Remplacée par la tâche migration-v2. ».</p>
+    <table class="chain"><thead><tr><th scope="col">The note says</th><th scope="col">Checked</th><th scope="col">Result</th></tr></thead><tbody>
+    <tr><td class="quote">Remplacée par la tâche migration-v2.</td><td>obsolete <code>Remplacée par</code></td><td><span class="state" data-state="cité">cité</span></td></tr>
+  </tbody></table>
+  </div></details>
+  </section>
+  <section class="group" aria-labelledby="g-bloquée-user">
+    <h3 id="g-bloquée-user"><span class="swatch" data-verdict="bloquée-user"></span>bloquée-user <span class="gloss">blocked on a person</span></h3>
+    <p class="sub">A written blocker waits on someone.</p>
+    <details><summary><span class="title">Signer le contrat fournisseur</span> <span class="meta">user, overdue 49 days</span></summary><div class="card" data-verdict="bloquée-user">
+    <p class="task"><span class="title">Signer le contrat fournisseur</span> <span class="meta">user, overdue 49 days</span></p>
+    <p><span class="badge" data-verdict="bloquée-user">bloquée-user <span class="gloss">blocked on a person, medium confidence</span></span></p>
+    <p class="why">Blocage écrit : « GATÉ par la validation juridique. ».</p>
+    <table class="chain"><thead><tr><th scope="col">The note says</th><th scope="col">Checked</th><th scope="col">Result</th></tr></thead><tbody>
+    <tr><td class="quote">GATÉ par la validation juridique.</td><td>blocker <code>GATÉ</code></td><td><span class="state" data-state="cité">cité</span></td></tr>
+  </tbody></table>
+  </div></details><details><summary><span class="title">Review du compte d&#39;essai</span> <span class="meta">claude, overdue 34 days, suggestion dépend-de</span></summary><div class="card" data-verdict="bloquée-user">
+    <p class="task"><span class="title">Review du compte d&#39;essai</span> <span class="meta">claude, overdue 34 days</span></p>
+    <p><span class="badge" data-verdict="bloquée-user">bloquée-user <span class="gloss">blocked on a person, medium confidence</span></span></p>
+    <p class="why">Blocage écrit : « BLOQUÉE par compte-essai-user (geste user). ».</p><p class="suggestion">Suggestion: <strong>dépend-de</strong> <code>compte-essai-user</code>. La suite est la tâche compte-essai-user (user) : « BLOQUÉE par compte-essai-user (geste user). »</p>
+    <table class="chain"><thead><tr><th scope="col">The note says</th><th scope="col">Checked</th><th scope="col">Result</th></tr></thead><tbody>
+    <tr><td class="quote">BLOQUÉE par compte-essai-user (geste user).</td><td>blocker <code>BLOQUÉE par</code></td><td><span class="state" data-state="cité">cité</span></td></tr>
+    <tr><td class="quote">BLOQUÉE par compte-essai-user (geste user).</td><td>linked task <code>compte-essai-user</code></td><td><span class="state" data-state="todo">todo</span></td></tr>
+  </tbody></table>
+  </div></details>
+  </section>
+  <section class="group" aria-labelledby="g-à-vérifier">
+    <h3 id="g-à-vérifier"><span class="swatch" data-verdict="à-vérifier"></span>à-vérifier <span class="gloss">check by hand</span></h3>
+    <p class="sub">The evidence is partial or contradicts itself.</p>
+    <details><summary><span class="title">Poser la clé d&#39;API</span> <span class="meta">user, overdue 40 days</span></summary><div class="card" data-verdict="à-vérifier">
+    <p class="task"><span class="title">Poser la clé d&#39;API</span> <span class="meta">user, overdue 40 days</span></p>
+    <p><span class="badge" data-verdict="à-vérifier">à-vérifier <span class="gloss">check by hand</span></span></p>
+    <p class="why">Aucune preuve vérifiable par la machine.</p>
+    <table class="chain"><thead><tr><th scope="col">The note says</th><th scope="col">Checked</th><th scope="col">Result</th></tr></thead><tbody>
+    <tr><td class="quote">Clé posée dans .secrets/api.env.</td><td>file <code>.secrets/api.env</code></td><td><span class="state" data-state="refused">refused</span> <span class="detail">deliverable</span></td></tr>
+  </tbody></table>
+  </div></details><details><summary><span class="title">Relire le glossaire</span> <span class="meta">claude, overdue 37 days, suggestion réaffecter-user</span></summary><div class="card" data-verdict="à-vérifier">
+    <p class="task"><span class="title">Relire le glossaire</span> <span class="meta">claude, overdue 37 days</span></p>
+    <p><span class="badge" data-verdict="à-vérifier">à-vérifier <span class="gloss">check by hand, low confidence</span></span></p>
+    <p class="why">Avancement visible, preuve de livraison insuffisante.</p><p class="flags"><span class="flag">geste-user-restant</span> <span class="flag">avancement</span></p><p class="suggestion">Suggestion: <strong>réaffecter-user</strong>. Suite au user : « Glossaire écrit : docs/glossaire.md, à valider par le user. »</p>
+    <table class="chain"><thead><tr><th scope="col">The note says</th><th scope="col">Checked</th><th scope="col">Result</th></tr></thead><tbody>
+    <tr><td class="quote">Glossaire écrit : docs/glossaire.md, à valider par le user.</td><td>file <code>docs/glossaire.md</code></td><td><span class="state" data-state="present">present</span> <span class="detail">deliverable</span></td></tr>
+  </tbody></table>
+  </div></details><details><summary><span class="title">Corriger le lien du pied de page</span> <span class="meta">claude, overdue 32 days</span></summary><div class="card" data-verdict="à-vérifier">
+    <p class="task"><span class="title">Corriger le lien du pied de page</span> <span class="meta">claude, overdue 32 days</span></p>
+    <p><span class="badge" data-verdict="à-vérifier">à-vérifier <span class="gloss">check by hand</span></span></p>
+    <p class="why">Commit cité deadbee1 introuvable dans les dépôts.</p><p class="flags"><span class="flag">contradiction</span></p>
+    <table class="chain"><thead><tr><th scope="col">The note says</th><th scope="col">Checked</th><th scope="col">Result</th></tr></thead><tbody>
+    <tr><td class="quote">Corrigé, commit deadbee1.</td><td>commit <code>deadbee1</code></td><td><span class="state" data-state="absent">absent</span></td></tr>
+  </tbody></table>
+  </div></details><details><summary><span class="title">Brouillon d&#39;article</span> <span class="meta">claude, overdue 24 days</span></summary><div class="card" data-verdict="à-vérifier">
+    <p class="task"><span class="title">Brouillon d&#39;article</span> <span class="meta">claude, overdue 24 days</span></p>
+    <p><span class="badge" data-verdict="à-vérifier">à-vérifier <span class="gloss">check by hand, low confidence</span></span></p>
+    <p class="why">Avancement visible, preuve de livraison insuffisante.</p><p class="flags"><span class="flag">avancement</span></p>
+    <table class="chain"><thead><tr><th scope="col">The note says</th><th scope="col">Checked</th><th scope="col">Result</th></tr></thead><tbody>
+    <tr><td class="quote">Brouillon dans docs/brouillon.md, à finir.</td><td>file <code>docs/brouillon.md</code></td><td><span class="state" data-state="present">present</span> <span class="detail">mention</span></td></tr>
+  </tbody></table>
+  </div></details><details><summary><span class="title">Relevé hebdomadaire</span> <span class="meta">claude, overdue 12 days</span></summary><div class="card" data-verdict="à-vérifier">
+    <p class="task"><span class="title">Relevé hebdomadaire</span> <span class="meta">claude, overdue 12 days</span></p>
+    <p><span class="badge" data-verdict="à-vérifier">à-vérifier <span class="gloss">check by hand</span></span></p>
+    <p class="why">Preuve présente, mais une tâche récurrente ne se clôt pas sur une occurrence.</p><p class="flags"><span class="flag">récurrente</span></p>
+    <table class="chain"><thead><tr><th scope="col">The note says</th><th scope="col">Checked</th><th scope="col">Result</th></tr></thead><tbody>
+    <tr><td class="quote">Relevé écrit : docs/releve.md, commit 62e0fc3817.</td><td>file <code>docs/releve.md</code></td><td><span class="state" data-state="present">present</span> <span class="detail">deliverable</span></td></tr>
+    <tr><td class="quote">Relevé écrit : docs/releve.md, commit 62e0fc3817.</td><td>commit <code>62e0fc3817</code></td><td><span class="state" data-state="found">found</span> <span class="detail">touche : docs/releve.md</span></td></tr>
+  </tbody></table>
+  </div></details>
+  </section>
+  <section class="group" aria-labelledby="g-replanifier">
+    <h3 id="g-replanifier"><span class="swatch" data-verdict="replanifier"></span>replanifier <span class="gloss">reschedule</span></h3>
+    <p class="sub">No evidence and no blocker.</p>
+    <details><summary><span class="title">Préparer la démo client</span> <span class="meta">claude, overdue 21 days</span></summary><div class="card" data-verdict="replanifier">
+    <p class="task"><span class="title">Préparer la démo client</span> <span class="meta">claude, overdue 21 days</span></p>
+    <p><span class="badge" data-verdict="replanifier">replanifier <span class="gloss">reschedule, low confidence</span></span></p>
+    <p class="why">Aucune preuve, aucun blocage écrit.</p>
+    <p class="none">No checkable claim in the notes.</p>
+  </div></details>
+  </section>
+</section>
+<section aria-labelledby="rules-h">
+  <h2 id="rules-h">How a verdict is decided</h2>
+  <p>Rules are tried in this order; the first that matches wins. A language model never decides.</p>
+  <table class="rules"><tbody>
+    <tr><th scope="row">check by hand</th><td>Proof and a written blocker at once, a cited commit that does not exist, or a delivered URL that is gone.</td></tr>
+    <tr><th scope="row">drop</th><td>The task was moved elsewhere, or a sentence opens with “replaced by”, “cancelled because” or “migrated to”.</td></tr>
+    <tr><th scope="row">blocked on a person</th><td>An explicit blocker is written in the notes.</td></tr>
+    <tr><th scope="row">close, high</th><td>A delivered file exists and a commit that touches that file exists.</td></tr>
+    <tr><th scope="row">close, medium</th><td>A delivered file exists, plus an unrelated commit or a delivered URL that answers.</td></tr>
+    <tr><th scope="row">check by hand, low</th><td>Some progress is visible but the proof is not enough.</td></tr>
+    <tr><th scope="row">reschedule</th><td>An agent’s task with no evidence and no blocker.</td></tr>
+  </tbody></table>
+</section>
+<footer>
+  <p>Synthetic data: no real task appears on this page. The notes are in French because the evidence patterns are. Generated by <code>node bin/demo.mjs</code>.</p>
+  <p>Source code, MIT license: <a href="https://github.com/editrtrain-art/proof-triage">github.com/editrtrain-art/proof-triage</a></p>
+</footer>
+</main></body></html>

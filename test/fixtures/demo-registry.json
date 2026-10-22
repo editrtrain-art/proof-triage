@@ -1,0 +1,19 @@
+{
+  "schemaVersion": 1,
+  "note": "Registre SYNTHÉTIQUE de la démo web. Aucune tâche réelle. Notes sans date : la page publiée n'en affiche aucune.",
+  "tasks": [
+    { "id": "guide-installation", "title": "Écrire le guide d'installation", "status": "todo", "owner": "claude", "priority": "P1", "due": "2026-09-01", "tags": [], "notes": "Guide écrit : docs/guide.md, commit {{SHA}}." },
+    { "id": "note-de-version", "title": "Publier la note de version", "status": "todo", "owner": "claude", "priority": "P2", "due": "2026-09-08", "tags": [], "notes": "Note de version écrite : docs/release.md (commit {{SHA_OTHER}})." },
+    { "id": "contrat-fournisseur", "title": "Signer le contrat fournisseur", "status": "todo", "owner": "user", "priority": "P1", "due": "2026-09-03", "tags": [], "notes": "GATÉ par la validation juridique." },
+    { "id": "ancienne-migration", "title": "Ancienne migration de la base", "status": "todo", "owner": "claude", "priority": "P3", "due": "2026-08-25", "tags": [], "notes": "Remplacée par la tâche migration-v2." },
+    { "id": "glossaire", "title": "Relire le glossaire", "status": "todo", "owner": "claude", "priority": "P2", "due": "2026-09-15", "tags": [], "notes": "Glossaire écrit : docs/glossaire.md, à valider par le user." },
+    { "id": "lien-pied-de-page", "title": "Corriger le lien du pied de page", "status": "todo", "owner": "claude", "priority": "P2", "due": "2026-09-20", "tags": [], "notes": "Corrigé, commit deadbee1." },
+    { "id": "preparer-demo", "title": "Préparer la démo client", "status": "todo", "owner": "claude", "priority": "P2", "due": "2026-10-01", "tags": [], "notes": "Rien de fait." },
+    { "id": "releve-hebdo", "title": "Relevé hebdomadaire", "status": "todo", "owner": "claude", "priority": "P3", "due": "2026-10-10", "tags": [], "recurrence": "weekly", "notes": "Relevé écrit : docs/releve.md, commit {{SHA}}." },
+    { "id": "brouillon-article", "title": "Brouillon d'article", "status": "todo", "owner": "claude", "priority": "P3", "due": "2026-09-28", "tags": [], "notes": "Brouillon dans docs/brouillon.md, à finir." },
+    { "id": "cle-api", "title": "Poser la clé d'API", "status": "todo", "owner": "user", "priority": "P2", "due": "2026-09-12", "tags": [], "notes": "Clé posée dans .secrets/api.env." },
+    { "id": "review-compte", "title": "Review du compte d'essai", "status": "todo", "owner": "claude", "priority": "P2", "due": "2026-09-18", "tags": [], "notes": "BLOQUÉE par compte-essai-user (geste user)." },
+    { "id": "compte-essai-user", "title": "Ouvrir le compte d'essai", "status": "todo", "owner": "user", "priority": "P2", "due": "2026-11-30", "tags": [], "notes": "" },
+    { "id": "migration-v2", "title": "Migration de la base, v2", "status": "todo", "owner": "claude", "priority": "P2", "due": "2026-12-15", "tags": [], "notes": "" }
+  ]
+}
