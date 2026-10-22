@@ -1,0 +1,12 @@
+{
+  "name": "proof-triage",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "Propose des verdicts sur les tâches en retard du registre, à partir de preuves vérifiables. Lecture seule.",
+  "engines": { "node": ">=20" },
+  "scripts": {
+    "triage": "node bin/triage.mjs",
+    "test": "node --test test/"
+  }
+}

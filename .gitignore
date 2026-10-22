@@ -1,0 +1,10 @@
+# Machine-local config (paths to the real registry and repos)
+proof-triage.config.json
+# Never commit real data or outputs
+out/
+AUDIT/
+*.bak*
+ops-tasks*.json
+!test/fixtures/*.json
+node_modules/
+.env*

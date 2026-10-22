@@ -1,0 +1,8 @@
+{
+  "root": "..",
+  "registry": "data/tasks.json",
+  "repos": ["."],
+  "outDir": "AUDIT",
+  "refuseSegments": [".secrets"],
+  "backupKeepDays": 30
+}
