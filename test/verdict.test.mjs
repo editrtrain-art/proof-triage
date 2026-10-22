@@ -80,6 +80,16 @@ test('ligne 3b : livrable présent ET URL ok → clore, moyenne', () => {
   assert.deepEqual([v.verdict, v.confidence], ['clore', 'moyenne']);
 });
 
+test('piège : une URL seulement mentionnée qui répond ne prouve rien (relevé réel du 22/10)', () => {
+  const v = run({ notes: 'DIAGNOSTIC FAIT : docs/a.md. Le lien http://ex.com/c redirige.' }, { files: present, urls: { 'http://ex.com/c': { state: 'ok', status: 200 } } });
+  assert.notEqual(v.verdict, 'clore');
+});
+
+test('piège : une URL seulement mentionnée et morte n\'est pas une contradiction', () => {
+  const v = run({ notes: 'Le lien http://ex.com/c est mort.' }, { urls: { 'http://ex.com/c': { state: 'gone', status: 404 } } });
+  assert.ok(!v.flags.includes('contradiction'));
+});
+
 test('piège : le chemin du champ source n\'est jamais une preuve', () => {
   const v = run({ owner: 'user', source: 'docs/a.md', notes: 'Relire, commit abc1234.' }, { files: present, commits: touching });
   assert.notEqual(v.verdict, 'clore');

@@ -92,6 +92,11 @@ test('SHA : rôle commit si la phrase dit commit/commité/poussé, sinon hex ; p
   assert.deepEqual(c.shas.map((s) => [s.value, s.role]), [['abc1234', 'commit'], ['1a1322e21f94bbe2', 'hex'], ['2443bbd', 'commit']]);
 });
 
+test('URL : rôle deliverable si la phrase dit une livraison ou « en ligne », sinon mention', () => {
+  const c = claims(task('Page publiée sur https://ex.com/a. En ligne sur https://ex.com/b ; le lien http://ex.com/c redirige.'));
+  assert.deepEqual(c.urls.map((u) => [u.value, u.role]), [['https://ex.com/a', 'deliverable'], ['https://ex.com/b', 'deliverable'], ['http://ex.com/c', 'mention']]);
+});
+
 test('URL extraites sans ponctuation finale, dédoublonnées', () => {
   const c = claims(task('En ligne sur https://example.com/page. Revoir https://example.com/page'));
   assert.deepEqual(values(c.urls), ['https://example.com/page']);

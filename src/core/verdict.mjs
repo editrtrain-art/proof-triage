@@ -17,7 +17,7 @@ export function decide(task, claimsIn, results, { today, byId = new Map() }) {
       const r = commit(s.value);
       return { kind: 'commit', value: s.value, snippet: s.snippet, state: r.state, detail: r.repo ? `${r.repo} ; touche : ${r.touches?.join(', ') || 'aucun livrable cité'}` : '' };
     }),
-    ...c.urls.map((u) => ({ kind: 'url', value: u.value, snippet: u.snippet, state: url(u.value).state, detail: url(u.value).status ? `HTTP ${url(u.value).status}` : '' })),
+    ...c.urls.map((u) => ({ kind: 'url', value: u.value, snippet: u.snippet, state: url(u.value).state, detail: [u.role, url(u.value).status && `HTTP ${url(u.value).status}`].filter(Boolean).join(' · ') })),
     ...c.blockers.map((b) => ({ kind: 'blocker', value: b.value, snippet: b.snippet, state: 'cité', detail: '' })),
     ...c.obsolete.map((o) => ({ kind: 'obsolete', value: o.value, snippet: o.snippet, state: 'cité', detail: '' })),
     ...c.dateConditions.filter((d) => d.value).map((d) => ({ kind: 'condition', value: d.value, snippet: d.snippet, state: d.value < today ? 'échue' : 'à-venir', detail: d.role })),
@@ -32,13 +32,15 @@ export function decide(task, claimsIn, results, { today, byId = new Map() }) {
   const progress = c.paths.some((p) => p.role !== 'context' && file(p.value).state === 'present');
   const found = c.shas.map((s) => commit(s.value)).filter((r) => r.state === 'found');
   const touching = found.some((r) => r.touches?.some((t) => delivered.includes(t)));
-  const urlOk = c.urls.some((u) => url(u.value).state === 'ok');
+  // Seule une URL citée comme livrée prouve (ou contredit) : une URL mentionnée est souvent le problème, pas la livraison.
+  const delivUrls = c.urls.filter((u) => u.role === 'deliverable');
+  const urlOk = delivUrls.some((u) => url(u.value).state === 'ok');
   const proof = delivered.length > 0 && (found.length > 0 || urlOk);
   const out = (verdict, confidence, why, ...more) => ({ verdict, confidence, flags: [...flags, ...more], evidence, why });
 
   // 0. contradiction
   const absent = c.shas.find((s) => commit(s.value).state === 'absent');
-  const gone = c.urls.find((u) => url(u.value).state === 'gone');
+  const gone = delivUrls.find((u) => url(u.value).state === 'gone');
   if (proof && c.blockers.length) return out('à-vérifier', null, `Preuve de livraison ET blocage écrit ${quote(c.blockers[0].snippet)}.`, 'contradiction');
   if (absent) return out('à-vérifier', null, `Commit cité ${absent.value} introuvable dans les dépôts.`, 'contradiction');
   if (gone) return out('à-vérifier', null, `URL citée disparue : ${gone.value}.`, 'contradiction');
