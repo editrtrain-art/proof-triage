@@ -18,7 +18,7 @@ export function decide(task, c, results, { today, byId = new Map() }) {
     ...c.urls.map((u) => ({ kind: 'url', value: u.value, snippet: u.snippet, state: url(u.value).state, detail: url(u.value).status ? `HTTP ${url(u.value).status}` : '' })),
     ...c.blockers.map((b) => ({ kind: 'blocker', value: b.value, snippet: b.snippet, state: 'cité', detail: '' })),
     ...c.obsolete.map((o) => ({ kind: 'obsolete', value: o.value, snippet: o.snippet, state: 'cité', detail: '' })),
-    ...c.dateConditions.map((d) => ({ kind: 'condition', value: d.value, snippet: d.snippet, state: !d.value ? 'non-datée' : d.value < today ? 'échue' : 'à-venir', detail: d.role })),
+    ...c.dateConditions.filter((d) => d.value).map((d) => ({ kind: 'condition', value: d.value, snippet: d.snippet, state: d.value < today ? 'échue' : 'à-venir', detail: d.role })),
     ...c.links.filter((l) => byId.has(l.value)).map((l) => ({ kind: 'link', value: l.value, snippet: l.snippet, state: byId.get(l.value).status, detail: '' })),
   ];
 

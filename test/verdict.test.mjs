@@ -114,6 +114,10 @@ test('drapeau condition-échue : date calculable dépassée seulement', () => {
   assert.ok(!run({ notes: 'À livrer avant le 15/09.' }).flags.includes('condition-échue'));
 });
 
+test('une condition sans date ne s\'affiche pas en preuve (bruit)', () => {
+  assert.ok(!run({ notes: 'Exige un dataset réel, sinon NEEDS_INPUT.' }).evidence.some((e) => e.kind === 'condition'));
+});
+
 test('récurrente : jamais clore, drapeau récurrente', () => {
   const v = run({ recurrence: 'weekly', notes: 'Relevé produit : docs/a.md, commit abc1234.' }, { files: present, commits: touching });
   assert.equal(v.verdict, 'à-vérifier');

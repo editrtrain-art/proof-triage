@@ -37,6 +37,21 @@ test('« à livrer » n\'est pas un verbe de livraison accompli', () => {
   assert.equal(c.paths[0].role, 'mention');
 });
 
+test('le séparateur || coupe aussi les mises à jour', () => {
+  const c = claims(task('Voir docs/a.md || 11/09 : X publié docs/b.md'));
+  assert.deepEqual(c.paths.map((p) => [p.value, p.role]), [['docs/a.md', 'mention'], ['docs/b.md', 'deliverable']]);
+});
+
+test('un domaine sans schéma n\'est pas un chemin (zoho.com/x.html, old.reddit.com/u/)', () => {
+  assert.deepEqual(claims(task('Formulaire zoho.com/recruit/signup.html et old.reddit.com/user/x/edit/ ; fichier .agents/skills/a.md')).paths.map((p) => p.value), ['.agents/skills/a.md']);
+});
+
+test('un chemin cité plusieurs fois garde son rôle le plus fort (deliverable > mention > context)', () => {
+  const c = claims(task('Brouillon dans docs/a.md. | 12/09 : docs/a.md publié.', { source: 'docs/a.md' }));
+  assert.deepEqual(c.paths.map((p) => [p.value, p.role]), [['docs/a.md', 'deliverable']]);
+  assert.match(c.paths[0].snippet, /publié/);
+});
+
 test('routes de site, URL, dates et r/xxx ne sont pas des chemins', () => {
   const c = claims(task('Page /guides/x/ et /go/y ; https://ex.com/a/b.html le 30/09/2024 sur r/ShadowBan.'));
   assert.deepEqual(c.paths, []);

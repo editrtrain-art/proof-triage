@@ -4,14 +4,24 @@ import { DELIVERY, NEGATION, BLOCKERS, OBSOLETE, CONDITION, URL, PATH, PATH_TAIL
 const SNIPPET = 160;
 const snip = (s) => s.trim().slice(0, SNIPPET);
 const uniq = (list) => list.filter((c, i) => list.findIndex((d) => d.value === c.value) === i);
+// Un chemin cité plusieurs fois garde son rôle le plus fort, avec l'extrait qui le justifie.
+const ROLE_RANK = { context: 0, mention: 1, deliverable: 2 };
+function strongest(list) {
+  const m = new Map();
+  for (const c of list) if (!m.has(c.value) || ROLE_RANK[c.role] > ROLE_RANK[m.get(c.value).role]) m.set(c.value, c);
+  return [...m.values()];
+}
 
-// Segments = mises à jour « … | 07/09 : … » ; phrases = coupées sur . ! ? suivis d'un blanc, ; et retour ligne.
-const segmentsOf = (text) => text.split(/\s\|\s/).map((seg) => ({ seg, sentences: seg.split(/(?<=[.!?])\s+|[;\n]/) }));
+// Segments = mises à jour « … | 07/09 : … » ou « … || 07/09 : … » ; phrases = coupées sur . ! ? suivis d'un blanc, ; et retour ligne.
+const segmentsOf = (text) => text.split(/\s\|\|?\s/).map((seg) => ({ seg, sentences: seg.split(/(?<=[.!?])\s+|[;\n]/) }));
+
+// Premier segment en forme de domaine (zoho.com/…, old.reddit.com/…) = URL sans schéma, pas un fichier.
+const DOMAIN_HEAD = /^[a-z0-9-]+(?:\.[a-z0-9-]+)*\.[a-z]{2,6}$/i;
 
 function pathsIn(text) {
   return (text.replace(URL, ' ').match(PATH) || [])
     .map((p) => p.replace(/\.+$/, ''))
-    .filter((p) => PATH_TAIL.test(p) && /[A-Za-z]/.test(p));
+    .filter((p) => PATH_TAIL.test(p) && /[A-Za-z]/.test(p) && !DOMAIN_HEAD.test(p.split('/')[0]));
 }
 
 // shortcut: année JJ/MM prise de l'échéance de la tâche ; faux sur une note qui chevauche le nouvel an. Améliorer si ça se voit au tri.
@@ -63,6 +73,7 @@ export function claims(task) {
       }
     }
   }
-  for (const k of ['paths', 'shas', 'urls', 'links']) out[k] = uniq(out[k]);
+  out.paths = strongest(out.paths);
+  for (const k of ['shas', 'urls', 'links']) out[k] = uniq(out[k]);
   return out;
 }
