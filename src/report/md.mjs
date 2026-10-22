@@ -20,6 +20,7 @@ export function toMarkdown({ meta, rows }) {
     '',
     ORDER.filter((v) => meta.counts[v]).map((v) => `${v} : ${meta.counts[v]}`).join(' · '),
     '',
+    ...(Object.keys(meta.suggestions || {}).length ? [`suggestions : ${Object.entries(meta.suggestions).map(([k, n]) => `${k} ${n}`).join(' · ')} (à faire avec bin/task.mjs, jamais par --apply)`, ''] : []),
     'Le tri n\'a rien écrit dans le registre. Cocher `[x]` une ligne valide sa décision ; `triage --apply <ce dossier>` n\'applique ensuite que clore (→ done) et sans-objet (→ cancelled), après sauvegarde, et jamais sur une tâche modifiée depuis le tri.',
   ];
   let current;
@@ -29,6 +30,7 @@ export function toMarkdown({ meta, rows }) {
     const flags = r.flags.length ? ` · ${r.flags.join(', ')}` : '';
     out.push(`- [ ] **${esc(r.id)}** — ${esc(r.title)} (${esc(r.owner)}, échéance ${esc(r.due)}, ${esc(r.priority)}) · confiance ${r.confidence ?? '—'}${flags}`);
     out.push(`  - ${esc(r.why)}`);
+    if (r.suggestion) out.push(`  - suggestion : ${r.suggestion.kind}${r.suggestion.id ? ` ${esc(r.suggestion.id)}` : ''} · ${esc(r.suggestion.why)}`);
     for (const e of r.evidence) {
       const detail = e.detail ? ` (${esc(e.detail)})` : '';
       out.push(`  - ${KIND[e.kind] || e.kind} ${esc(e.value ?? 'sans date')}${detail} → **${esc(e.state)}** · « ${esc(e.snippet)} »`);

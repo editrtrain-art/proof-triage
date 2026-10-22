@@ -53,6 +53,12 @@ test('refus : delete sans --confirm, id déjà existant, commande inconnue, éch
   assert.equal(readFileSync(registry, 'utf8'), before);
 });
 
+test('reassign --owner user', () => {
+  const r = task('reassign', 'q-avancement', '--owner', 'user', '--note', 'suite = relecture user');
+  assert.equal(r.status, 0, r.stderr);
+  assert.equal(find('q-avancement').owner, 'user');
+});
+
 test('delete --confirm retire la tâche', () => {
   assert.equal(task('delete', 'd-reste-sans-user', '--confirm').status, 0);
   assert.equal(find('d-reste-sans-user'), undefined);

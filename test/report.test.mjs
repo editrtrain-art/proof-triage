@@ -53,6 +53,15 @@ test('triage.md : chaque preuve en trois temps (extrait → contrôle → résul
   assert.match(md, /fichier docs\/a\.md \(deliverable\) → \*\*present\*\* · « Rapport écrit : docs\/a\.md »/);
 });
 
+test('triage.md : la suggestion s\'affiche sous la tâche, échappée, et se compte dans l\'en-tête', () => {
+  const r = toReport([row('a', 'à-vérifier', 'basse', { suggestion: { kind: 'réaffecter-user', why: 'Suite au user : « à valider par le user » [x]' } })], META);
+  assert.deepEqual(r.meta.suggestions, { 'réaffecter-user': 1 });
+  const md = toMarkdown(r);
+  assert.match(md, /suggestion : réaffecter-user · Suite au user/);
+  assert.match(md, /\\\[x\\\]/);
+  assert.match(md, /suggestions : réaffecter-user 1/);
+});
+
 test('esc neutralise le Markdown et le HTML venus des notes, sur une seule ligne', () => {
   const s = esc('<script>x</script> [lien](http://evil) | `code` *gras*\nligne 2');
   assert.ok(!/[<>\n]/.test(s.replace(/\\[<>]/g, '')), s);

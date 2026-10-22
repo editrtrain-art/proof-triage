@@ -8,8 +8,8 @@ import { applyOp } from '../src/core/ops.mjs';
 import { loadConfig, DEFAULT_CONFIG, localToday } from '../src/lib/config.mjs';
 
 const fail = (msg) => { console.error(`proof-triage : ${msg}`); process.exit(2); };
-const USAGE = 'usage : task add|close|cancel|reschedule|delete <id> [--note …] [--due AAAA-MM-JJ] [--title … --owner claude|user …] [--confirm]';
-const KINDS = ['add', 'close', 'cancel', 'reschedule', 'delete'];
+const USAGE = 'usage : task add|close|cancel|reschedule|reassign|delete <id> [--note …] [--due AAAA-MM-JJ] [--owner claude|user] [--title …] [--confirm]';
+const KINDS = ['add', 'close', 'cancel', 'reschedule', 'reassign', 'delete'];
 
 let parsed;
 try {

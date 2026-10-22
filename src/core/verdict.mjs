@@ -3,6 +3,7 @@
 // une affirmation sans résultat est « unchecked » et ne prouve jamais rien.
 const get = (map, k) => map?.[k] || { state: 'unchecked' };
 const quote = (s) => `« ${s} »`;
+const OPEN = ['todo', 'doing', 'open', 'parked'];
 
 export function decide(task, claimsIn, results, { today, byId = new Map() }) {
   const file = (v) => get(results.files, v);
@@ -28,6 +29,19 @@ export function decide(task, claimsIn, results, { today, byId = new Map() }) {
   if (task.recurrence) flags.push('récurrente');
   if (evidence.some((e) => e.kind === 'condition' && e.state === 'échue')) flags.push('condition-échue');
 
+  // Suggestion (pas un verdict) pour une tâche de Claude dont la suite revient au user :
+  // la suite est une AUTRE tâche user ouverte citée dans la même phrase → dépend-de ; sinon → réaffecter-user.
+  let suggestion = null;
+  if (task.owner === 'claude') {
+    const turnSnips = new Set([...c.userTurns, ...c.blockers].map((x) => x.snippet));
+    const dep = c.links.find((l) => turnSnips.has(l.snippet) && OPEN.includes(byId.get(l.value)?.status) && byId.get(l.value)?.owner === 'user');
+    if (dep) suggestion = { kind: 'dépend-de', id: dep.value, why: `La suite est la tâche ${dep.value} (user) : ${quote(dep.snippet)}` };
+    else if (c.userTurns.length) {
+      suggestion = { kind: 'réaffecter-user', why: `Suite au user : ${quote(c.userTurns[0].snippet)}` };
+      flags.push('geste-user-restant');
+    }
+  }
+
   const delivered = c.paths.filter((p) => p.role === 'deliverable' && file(p.value).state === 'present').map((p) => p.value);
   const progress = c.paths.some((p) => p.role !== 'context' && file(p.value).state === 'present');
   const found = c.shas.map((s) => commit(s.value)).filter((r) => r.state === 'found');
@@ -36,7 +50,11 @@ export function decide(task, claimsIn, results, { today, byId = new Map() }) {
   const delivUrls = c.urls.filter((u) => u.role === 'deliverable');
   const urlOk = delivUrls.some((u) => url(u.value).state === 'ok');
   const proof = delivered.length > 0 && (found.length > 0 || urlOk);
-  const out = (verdict, confidence, why, ...more) => ({ verdict, confidence, flags: [...flags, ...more], evidence, why });
+  // Une tâche à clore ou sans objet ne se réaffecte pas : la suggestion et son drapeau tombent.
+  const out = (verdict, confidence, why, ...more) => {
+    const s = ['clore', 'sans-objet'].includes(verdict) ? null : suggestion;
+    return { verdict, confidence, flags: [...flags.filter((f) => s || f !== 'geste-user-restant'), ...more], evidence, why, suggestion: s };
+  };
 
   // 0. contradiction
   const absent = c.shas.find((s) => commit(s.value).state === 'absent');

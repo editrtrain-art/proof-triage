@@ -21,6 +21,7 @@ node bin/triage.mjs --apply <triage dir> --dry-run   # preview the boxes ticked 
 node bin/triage.mjs --apply <triage dir>             # clore -> done, sans-objet -> cancelled
 node bin/task.mjs close|cancel <id> [--note "..."]
 node bin/task.mjs reschedule <id> --due YYYY-MM-DD
+node bin/task.mjs reassign <id> --owner user|claude   # act on a "réaffecter-user" suggestion
 node bin/task.mjs add <id> --title "..." --due YYYY-MM-DD --owner claude|user
 node bin/task.mjs delete <id> --confirm             # prefer cancel
 ```
@@ -39,7 +40,9 @@ Output: `<outDir>/proof-triage-<registry>-top<N>[-net][-sim]-<date>/` with `repo
 | `à-vérifier` | evidence and blocker together, a cited commit or URL missing, progress without proof, or nothing checkable |
 | `replanifier` | owner `claude`, no evidence, no blocker |
 
-Flags: `contradiction`, `avancement`, `condition-échue`, `récurrente`. A recurring task is never closed.
+Flags: `contradiction`, `avancement`, `condition-échue`, `récurrente`, `geste-user-restant`. A recurring task is never closed.
+
+Suggestions (not verdicts) for a `claude` task whose next step belongs to the user: `réaffecter-user`, or `dépend-de <id>` when that step is another open user task. They are never applied by `--apply`.
 
 ## Guarantees
 

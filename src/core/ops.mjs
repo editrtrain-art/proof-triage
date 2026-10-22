@@ -34,7 +34,7 @@ export function applyOp(doc, op, { today }) {
   }
   if (i === -1) throw new Error(`tâche inconnue : ${op.id}`);
   const t = d.tasks[i];
-  if (['close', 'cancel', 'reschedule'].includes(op.kind) && CLOSED.includes(t.status)) throw new Error(`${op.id} est déjà ${t.status}`);
+  if (['close', 'cancel', 'reschedule', 'reassign'].includes(op.kind) && CLOSED.includes(t.status)) throw new Error(`${op.id} est déjà ${t.status}`);
   switch (op.kind) {
     case 'close':
     case 'cancel':
@@ -45,6 +45,11 @@ export function applyOp(doc, op, { today }) {
     case 'reschedule':
       if (!ISO.test(op.due || '')) throw new Error('reschedule : due attendu en AAAA-MM-JJ');
       t.due = op.due;
+      t.notes = withNote(t.notes || '', op.note, today);
+      return d;
+    case 'reassign':
+      if (!OWNERS.includes(op.owner)) throw new Error(`reassign : owner attendu ${OWNERS.join('|')}`);
+      t.owner = op.owner;
       t.notes = withNote(t.notes || '', op.note, today);
       return d;
     case 'delete':

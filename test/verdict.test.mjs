@@ -142,6 +142,33 @@ test('récurrente : jamais clore, drapeau récurrente', () => {
   assert.ok(v.flags.includes('récurrente'));
 });
 
+test('suggestion : tâche de Claude dont la suite revient au user → réaffecter-user, verdict inchangé', () => {
+  const plain = run({ notes: 'Glossaire écrit : docs/a.md.' }, { files: present });
+  const v = run({ notes: 'Glossaire écrit : docs/a.md, à valider par le user.' }, { files: present });
+  assert.equal(v.verdict, plain.verdict);
+  assert.equal(v.suggestion.kind, 'réaffecter-user');
+  assert.match(v.suggestion.why, /à valider par le user/);
+  assert.ok(v.flags.includes('geste-user-restant'));
+});
+
+test('suggestion : la suite est une AUTRE tâche du user encore ouverte → dépend-de, pas de réaffectation', () => {
+  const deps = new Map([...byId, ['compte-trial-user', { id: 'compte-trial-user', status: 'todo', owner: 'user' }]]);
+  const t = { id: 't', owner: 'claude', due: '2026-09-01', notes: 'BLOQUÉE par compte-trial-user (geste user).' };
+  const v = decide(t, claims(t), { files: {}, commits: {}, urls: {} }, { today: TODAY, byId: deps });
+  assert.deepEqual([v.suggestion.kind, v.suggestion.id], ['dépend-de', 'compte-trial-user']);
+});
+
+test('suggestion : rien pour une tâche sans-objet (relevé réel : kit remplacé par un autre lot)', () => {
+  const v = run({ notes: 'Remplacé par le lot R11. Procédure 00-LANCEMENT-A-FAIRE-PAR-TOI.md.' });
+  assert.equal(v.verdict, 'sans-objet');
+  assert.equal(v.suggestion, null);
+});
+
+test('suggestion : rien pour une tâche déjà au user, ni sans tour du user', () => {
+  assert.equal(run({ owner: 'user', notes: 'À valider par le user.' }).suggestion, null);
+  assert.equal(run({ notes: 'Rien de fait.' }).suggestion, null);
+});
+
 test('chaque preuve garde extrait → contrôle → résultat', () => {
   const v = run({ notes: 'Rapport écrit : docs/a.md, commit abc1234.' }, { files: present, commits: touching });
   const f = v.evidence.find((e) => e.kind === 'file');

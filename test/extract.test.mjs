@@ -159,7 +159,18 @@ test('ids de tâches cités (kebab, 3 segments mini, au moins une lettre)', () =
   assert.deepEqual(values(c.links), ['z-annulee-ancienne', 'a-b-c']);
 });
 
+test('tour du user : formules relevées au registre réel (22/10)', () => {
+  for (const n of ['v0.1 écrite, à valider par le user.', 'QUESTION A TRANCHER PAR LE USER, une bonne fois.', 'RESTE à trancher par le user : polices.',
+    'BROUILLONS FAITS, en attente de la relecture du user.', 'La capture est un GESTE USER.', 'RESTE USER : Codex.', 'Procédure 00-LANCEMENT-A-FAIRE-PAR-TOI.md.', 'Relance rédigée, ENVOI USER depuis le compte.']) {
+    assert.equal(claims(task(n)).userTurns.length, 1, n);
+  }
+});
+
+test('pas un tour du user : une décision déjà prise par le user, un user cité', () => {
+  for (const n of ['Décision prise par le user le 31/08.', 'Le user a validé la v0.1.', 'Compte user créé.']) assert.deepEqual(claims(task(n)).userTurns, [], n);
+});
+
 test('notes absentes : tout est vide, rien ne casse', () => {
   const c = claims({ id: 'x' });
-  for (const k of ['paths', 'shas', 'urls', 'blockers', 'obsolete', 'dateConditions', 'links']) assert.deepEqual(c[k], [], k);
+  for (const k of ['paths', 'shas', 'urls', 'blockers', 'obsolete', 'dateConditions', 'links', 'userTurns']) assert.deepEqual(c[k], [], k);
 });

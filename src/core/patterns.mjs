@@ -33,6 +33,18 @@ export const OBSOLETE = [
 // Conséquences conditionnelles. « avant le JJ/MM » seul = échéance, absent d'ici.
 export const CONDITION = /(?<!\p{L})(J\+(\d+)|sinon|fen[êe]tres?|expir\p{L}*)(?!\p{L})/iu;
 
+// Tour du user : la suite de la tâche lui revient (relevé sur le registre réel le 22/10). Sert une SUGGESTION, jamais un verdict.
+// « Décision prise par le user » ou « le user a validé » sont du passé : pas un tour du user.
+export const USER_TURN = [
+  /geste (?:du )?user/i,
+  /(?<!\p{L})[àa] (?:valider|relire|arbitrer|trancher) par (?:le |la )?user/iu,
+  /en attente de (?:la |une )?(?:décision|validation|arbitrage|relecture) du user/iu,
+  /RESTE(?:NT)?(?: AU)? USER/i,
+  /A-FAIRE-PAR-TOI|(?<!\p{L})[àa] faire par (?:toi|le user)/iu,
+  /ENVOI USER/,
+  /VOLET CLAUDE (?:FAIT|TERMIN)/i,
+];
+
 export const URL = /https?:\/\/[^\s<>"'`»)\]]+/g;
 // Une URL ne prouve une livraison que dans une phrase de livraison, ou « en ligne sur … ».
 // Comme un verbe de livraison, « en ligne » se nie (« pas encore en ligne ») ; « à mettre en ligne » est un projet, pas une livraison.

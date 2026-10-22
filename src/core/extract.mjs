@@ -1,5 +1,5 @@
 // Affirmations vérifiables d'une tâche. PUR : n'exécute rien, ne lit rien, garde l'extrait source.
-import { DELIVERY, DELIVERY_UPPER, NEGATION, BLOCKERS, OBSOLETE, CONDITION, URL, ONLINE, TO_DO_BEFORE, PATH, PATH_TAIL, SHA, COMMIT_WORD, SHA256_BEFORE, LINK, DATE } from './patterns.mjs';
+import { DELIVERY, DELIVERY_UPPER, NEGATION, BLOCKERS, USER_TURN, OBSOLETE, CONDITION, URL, ONLINE, TO_DO_BEFORE, PATH, PATH_TAIL, SHA, COMMIT_WORD, SHA256_BEFORE, LINK, DATE } from './patterns.mjs';
 
 const SNIPPET = 160;
 const snip = (s) => s.trim().slice(0, SNIPPET);
@@ -41,7 +41,7 @@ const addDays =(iso, n) => new Date(Date.parse(iso) + n * 86400000).toISOString(
 export function claims(task) {
   const notes = String(task.notes || '');
   const year = String(task.due || task.created || '').slice(0, 4) || '1970';
-  const out = { paths: [], shas: [], urls: [], blockers: [], obsolete: [], dateConditions: [], links: [] };
+  const out = { paths: [], shas: [], urls: [], blockers: [], obsolete: [], dateConditions: [], links: [], userTurns: [] };
 
   for (const p of pathsIn(String(task.source || ''))) out.paths.push({ value: p, role: 'context', snippet: snip(String(task.source)) });
 
@@ -64,6 +64,8 @@ export function claims(task) {
       for (const l of bare.match(LINK) || []) if (/[a-z]/.test(l) && l !== task.id) out.links.push({ value: l, role: 'link', snippet });
       const b = BLOCKERS.find((re) => re.test(s));
       if (b) out.blockers.push({ value: s.match(b)[0], role: 'blocker', snippet });
+      const u = USER_TURN.find((re) => re.test(s));
+      if (u) out.userTurns.push({ value: s.match(u)[0], role: 'user-turn', snippet });
       const o = OBSOLETE.find((re) => re.test(s));
       if (o) out.obsolete.push({ value: s.match(o)[0], role: 'obsolete', snippet });
       const c = s.match(CONDITION);

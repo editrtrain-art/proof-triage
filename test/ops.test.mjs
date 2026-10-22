@@ -61,6 +61,14 @@ test('toute opération met à jour le champ updated du registre', () => {
   assert.equal(applyOp({ ...doc(), updated: '2026-01-01' }, { kind: 'close', id: 'a' }, { today: TODAY }).updated, TODAY);
 });
 
+test('reassign : change owner (claude|user), note ajoutée, refusé sur une tâche close ou un owner inconnu', () => {
+  const d = applyOp(doc(), { kind: 'reassign', id: 'a', owner: 'user', note: 'suite = validation user' }, { today: TODAY });
+  assert.equal(task(d, 'a').owner, 'user');
+  assert.match(task(d, 'a').notes, /22\/10 : suite = validation user$/);
+  assert.throws(() => applyOp(doc(), { kind: 'reassign', id: 'a', owner: 'robot' }, { today: TODAY }), /owner/);
+  assert.throws(() => applyOp(doc(), { kind: 'reassign', id: 'b', owner: 'claude' }, { today: TODAY }), /déjà done/);
+});
+
 test('delete : refusé sans confirm, retire la tâche avec confirm', () => {
   assert.throws(() => applyOp(doc(), { kind: 'delete', id: 'a' }, { today: TODAY }), /confirm/);
   assert.equal(applyOp(doc(), { kind: 'delete', id: 'a', confirm: true }, { today: TODAY }).tasks.length, 1);
