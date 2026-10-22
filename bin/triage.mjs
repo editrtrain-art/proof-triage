@@ -8,13 +8,9 @@ import { join } from 'node:path';
 import { load, save, unchanged } from '../src/sources/ops-tasks-json.mjs';
 import { loadRegistry, detectFormat } from '../src/sources/index.mjs';
 import { selectOverdue } from '../src/core/select.mjs';
-import { claims } from '../src/core/extract.mjs';
-import { decide } from '../src/core/verdict.mjs';
-import { applyOp, taskHash } from '../src/core/ops.mjs';
+import { applyOp } from '../src/core/ops.mjs';
 import { planApply } from '../src/core/apply.mjs';
-import { checkFile } from '../src/checks/file.mjs';
-import { checkCommit } from '../src/checks/commit.mjs';
-import { checkUrl } from '../src/checks/url.mjs';
+import { triageTasks } from '../src/run.mjs';
 import { toReport, SCHEMA_VERSION } from '../src/report/json.mjs';
 import { toMarkdown, checkedIds } from '../src/report/md.mjs';
 import { loadConfig, DEFAULT_CONFIG, localToday } from '../src/lib/config.mjs';
@@ -84,8 +80,6 @@ const simulate = o.simulate.map((s) => {
 
 let reg;
 try { reg = loadRegistry(registry, o.format || cfg.format); } catch (e) { fail(e.message); }
-// Empreinte par tâche sur sa forme brute (registre JSON) ou normalisée (autres formats, qui ne s'écrivent pas).
-const rawById = new Map((reg.doc?.tasks || reg.tasks).map((t) => [t.id, t]));
 let tasks;
 if (o.explain) {
   const t = reg.byId.get(o.explain);
@@ -95,24 +89,7 @@ if (o.explain) {
   tasks = selectOverdue(reg.tasks, { today: o.today, limit });
 }
 
-const rows = [];
-for (const t of tasks) {
-  const c = claims(t);
-  const results = { files: {}, commits: {}, urls: {} };
-  const cited = c.paths.filter((p) => p.role !== 'context').map((p) => p.value);
-  for (const s of c.shas) results.commits[s.value] = await checkCommit(s.value, { root, repos: cfg.repos || [], paths: cited });
-  // Un chemin absent à la racine est cherché dans le dépôt d'un commit trouvé qui le touche (et seulement là).
-  const under = (p) => Object.values(results.commits).filter((r) => r.state === 'found' && r.repo !== '.' && r.touches.includes(p)).map((r) => r.repo);
-  for (const p of c.paths) results.files[p.value] = checkFile(p.value, { root, refuseSegments: cfg.refuseSegments, under: under(p.value) });
-  if (o.net) for (const u of c.urls) results.urls[u.value] = await checkUrl(u.value);
-  for (const { map, state } of simulate) {
-    const keys = { files: c.paths, commits: c.shas, urls: c.urls }[map];
-    for (const k of keys) results[map][k.value] = { state, touches: [] };
-  }
-  const v = decide(t, c, results, { today: o.today, byId: reg.byId });
-  // taskHash : empreinte de la tâche brute, pour que --apply refuse une décision prise sur une version périmée.
-  rows.push({ id: t.id, title: t.title, owner: t.owner, due: t.due, priority: t.priority, status: t.status, taskHash: taskHash(rawById.get(t.id)), ...v });
-}
+const rows = await triageTasks(tasks, reg, { root, repos: cfg.repos || [], refuseSegments: cfg.refuseSegments, today: o.today, net: o.net, simulate });
 
 const meta = {
   today: o.today,
