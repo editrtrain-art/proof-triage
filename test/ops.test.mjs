@@ -67,6 +67,7 @@ test('reassign : change owner (claude|user), note ajoutée, refusé sur une tâc
   assert.match(task(d, 'a').notes, /22\/10 : suite = validation user$/);
   assert.throws(() => applyOp(doc(), { kind: 'reassign', id: 'a', owner: 'robot' }, { today: TODAY }), /owner/);
   assert.throws(() => applyOp(doc(), { kind: 'reassign', id: 'b', owner: 'claude' }, { today: TODAY }), /déjà done/);
+  assert.throws(() => applyOp(doc(), { kind: 'reassign', id: 'a', owner: 'claude' }, { today: TODAY }), /déjà à claude/);
 });
 
 test('delete : refusé sans confirm, retire la tâche avec confirm', () => {

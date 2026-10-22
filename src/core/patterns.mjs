@@ -45,6 +45,14 @@ export const USER_TURN = [
   /VOLET CLAUDE (?:FAIT|TERMIN)/i,
 ];
 
+// Tour du user ACCOMPLI : annule un tour du user écrit avant lui (« validé par le user », « geste user fait »).
+export const USER_DONE = [
+  /(?:valid|relu|tranch|arbitr|fait|envoy)[ée]?e?s? par (?:le |la )?user/i,
+  /le user a (?:valid|relu|tranch|arbitr|fait|envoy)/i,
+  /geste (?:du )?user (?:fait|effectu)/i,
+  /ENVOI USER (?:FAIT|EFFECTU)/i,
+];
+
 export const URL = /https?:\/\/[^\s<>"'`»)\]]+/g;
 // Une URL ne prouve une livraison que dans une phrase de livraison, ou « en ligne sur … ».
 // Comme un verbe de livraison, « en ligne » se nie (« pas encore en ligne ») ; « à mettre en ligne » est un projet, pas une livraison.

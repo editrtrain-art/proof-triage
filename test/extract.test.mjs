@@ -103,6 +103,11 @@ test('URL : « pas encore en ligne » et « à mettre en ligne » ne livrent rie
   assert.equal(claims(task('Mis en ligne sur https://ex.com/a')).urls[0].role, 'deliverable');
 });
 
+test('SHA tout en chiffres : accepté dans une phrase « commit » (≈ 3,7 % des SHA courts), jamais sans', () => {
+  assert.deepEqual(claims(task('Script écrit (commit 1234567890).')).shas.map((s) => [s.value, s.role]), [['1234567890', 'commit']]);
+  assert.deepEqual(claims(task('Alerte 1234567890 reçue, date 2026091.')).shas, []);
+});
+
 test('URL extraites sans ponctuation finale, dédoublonnées', () => {
   const c = claims(task('En ligne sur https://example.com/page. Revoir https://example.com/page'));
   assert.deepEqual(values(c.urls), ['https://example.com/page']);

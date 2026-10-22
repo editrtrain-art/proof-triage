@@ -16,7 +16,7 @@ export function decide(task, claimsIn, results, { today, byId = new Map() }) {
     ...c.paths.map((p) => ({ kind: 'file', value: p.value, snippet: p.snippet, state: file(p.value).state, detail: p.role })),
     ...c.shas.map((s) => {
       const r = commit(s.value);
-      return { kind: 'commit', value: s.value, snippet: s.snippet, state: r.state, detail: r.repo ? `${r.repo} ; touche : ${r.touches?.join(', ') || 'aucun livrable cité'}` : '' };
+      return { kind: 'commit', value: s.value, snippet: s.snippet, state: r.state, detail: r.repo ? `${r.repo} ; touche : ${r.touches?.join(', ') || 'aucun livrable cité'}` : r.reason || '' };
     }),
     ...c.urls.map((u) => ({ kind: 'url', value: u.value, snippet: u.snippet, state: url(u.value).state, detail: [u.role, url(u.value).status && `HTTP ${url(u.value).status}`].filter(Boolean).join(' · ') })),
     ...c.blockers.map((b) => ({ kind: 'blocker', value: b.value, snippet: b.snippet, state: 'cité', detail: '' })),
@@ -31,13 +31,16 @@ export function decide(task, claimsIn, results, { today, byId = new Map() }) {
 
   // Suggestion (pas un verdict) pour une tâche de Claude dont la suite revient au user :
   // la suite est une AUTRE tâche user ouverte citée dans la même phrase → dépend-de ; sinon → réaffecter-user.
+  // Un tour du user ne compte que s'il est postérieur au dernier tour du user accompli (notes en ajout seul : ordre = n).
   let suggestion = null;
-  if (task.owner === 'claude') {
-    const turnSnips = new Set([...c.userTurns, ...c.blockers].map((x) => x.snippet));
-    const dep = c.links.find((l) => turnSnips.has(l.snippet) && OPEN.includes(byId.get(l.value)?.status) && byId.get(l.value)?.owner === 'user');
+  if (task.owner === 'claude' && OPEN.includes(task.status ?? 'todo')) {
+    const lastDone = Math.max(-1, ...c.userDone.map((d) => d.n));
+    const turns = c.userTurns.filter((t) => t.n > lastDone);
+    const sentences = new Set([...turns, ...c.blockers].map((x) => x.n));
+    const dep = c.links.find((l) => sentences.has(l.n) && OPEN.includes(byId.get(l.value)?.status) && byId.get(l.value)?.owner === 'user');
     if (dep) suggestion = { kind: 'dépend-de', id: dep.value, why: `La suite est la tâche ${dep.value} (user) : ${quote(dep.snippet)}` };
-    else if (c.userTurns.length) {
-      suggestion = { kind: 'réaffecter-user', why: `Suite au user : ${quote(c.userTurns[0].snippet)}` };
+    else if (turns.length) {
+      suggestion = { kind: 'réaffecter-user', why: `Suite au user : ${quote(turns.at(-1).snippet)}` };
       flags.push('geste-user-restant');
     }
   }

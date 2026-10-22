@@ -49,6 +49,7 @@ export function applyOp(doc, op, { today }) {
       return d;
     case 'reassign':
       if (!OWNERS.includes(op.owner)) throw new Error(`reassign : owner attendu ${OWNERS.join('|')}`);
+      if (t.owner === op.owner) throw new Error(`${op.id} est déjà à ${op.owner} : rien à écrire`);
       t.owner = op.owner;
       t.notes = withNote(t.notes || '', op.note, today);
       return d;

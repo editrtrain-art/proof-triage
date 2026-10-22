@@ -60,6 +60,8 @@ test('triage.md : la suggestion s\'affiche sous la tâche, échappée, et se com
   assert.match(md, /suggestion : réaffecter-user · Suite au user/);
   assert.match(md, /\\\[x\\\]/);
   assert.match(md, /suggestions : réaffecter-user 1/);
+  assert.match(md, /réaffecter-user → bin\/task\.mjs reassign/);
+  assert.match(md, /dépend-de → rien à réaffecter/);
 });
 
 test('esc neutralise le Markdown et le HTML venus des notes, sur une seule ligne', () => {

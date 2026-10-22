@@ -158,6 +158,25 @@ test('suggestion : la suite est une AUTRE tâche du user encore ouverte → dép
   assert.deepEqual([v.suggestion.kind, v.suggestion.id], ['dépend-de', 'compte-trial-user']);
 });
 
+test('suggestion : un tour du user déjà accompli plus loin dans les notes n\'en déclenche pas', () => {
+  assert.equal(run({ notes: 'v0.1 écrite, à valider par le user. | 21/10 : validé par le user, reste l\'intégration.' }).suggestion, null);
+  assert.equal(run({ notes: 'Geste user fait le 20/10, Claude reprend.' }).suggestion, null);
+  assert.equal(run({ notes: 'ENVOI USER fait.' }).suggestion, null);
+  // l'ordre compte : un nouveau tour du user APRÈS une validation redonne la suggestion
+  assert.equal(run({ notes: 'Validé par le user. | 22/10 : v0.2 écrite, à valider par le user.' }).suggestion.kind, 'réaffecter-user');
+});
+
+test('suggestion : rien sur une tâche close (--explain d\'une tâche done)', () => {
+  assert.equal(run({ status: 'done', notes: 'À valider par le user.' }).suggestion, null);
+});
+
+test('dépend-de : la tâche citée doit être dans la MÊME phrase, même si les phrases se ressemblent sur 160 caractères', () => {
+  const deps = new Map([...byId, ['compte-trial-user', { id: 'compte-trial-user', status: 'todo', owner: 'user' }]]);
+  const long = 'x'.repeat(170);
+  const t = { id: 't', owner: 'claude', due: '2026-09-01', notes: `${long} à valider par le user. ${long} voir compte-trial-user.` };
+  assert.equal(decide(t, claims(t), { files: {}, commits: {}, urls: {} }, { today: TODAY, byId: deps }).suggestion.kind, 'réaffecter-user');
+});
+
 test('suggestion : rien pour une tâche sans-objet (relevé réel : kit remplacé par un autre lot)', () => {
   const v = run({ notes: 'Remplacé par le lot R11. Procédure 00-LANCEMENT-A-FAIRE-PAR-TOI.md.' });
   assert.equal(v.verdict, 'sans-objet');

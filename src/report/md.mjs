@@ -20,7 +20,7 @@ export function toMarkdown({ meta, rows }) {
     '',
     ORDER.filter((v) => meta.counts[v]).map((v) => `${v} : ${meta.counts[v]}`).join(' · '),
     '',
-    ...(Object.keys(meta.suggestions || {}).length ? [`suggestions : ${Object.entries(meta.suggestions).map(([k, n]) => `${k} ${n}`).join(' · ')} (à faire avec bin/task.mjs, jamais par --apply)`, ''] : []),
+    ...(Object.keys(meta.suggestions || {}).length ? [`suggestions : ${Object.entries(meta.suggestions).map(([k, n]) => `${k} ${n}`).join(' · ')} (réaffecter-user → bin/task.mjs reassign <id> --owner user ; dépend-de → rien à réaffecter, la tâche user citée passe d'abord ; jamais par --apply)`, ''] : []),
     'Le tri n\'a rien écrit dans le registre. Cocher `[x]` une ligne valide sa décision ; `triage --apply <ce dossier>` n\'applique ensuite que clore (→ done) et sans-objet (→ cancelled), après sauvegarde, et jamais sur une tâche modifiée depuis le tri.',
   ];
   let current;

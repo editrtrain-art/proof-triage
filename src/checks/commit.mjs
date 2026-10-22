@@ -9,7 +9,9 @@ import { resolve, dirname } from 'node:path';
 
 const run = promisify(execFile);
 const SHA_RE = /^[0-9a-f]{7,40}$/;
-const ERROR = { state: 'error', touches: [] };
+// La cause d'une erreur est gardée (code, signal, délai, 1re ligne de stderr) : sans elle, une panne passe pour un mystère.
+const cause = (e) => (e.killed ? 'délai dépassé' : `${e.code ?? ''}${e.signal ? ` ${e.signal}` : ''} ${String(e.stderr || e.message || '').trim().split('\n')[0]}`.trim());
+const error = (reason) => ({ state: 'error', touches: [], reason });
 
 async function git(dir, args) {
   const env = Object.fromEntries(Object.entries(process.env).filter(([k]) => !k.startsWith('GIT_')));
@@ -24,23 +26,24 @@ async function git(dir, args) {
 export async function checkCommit(sha, { root, repos = [], paths = [] }) {
   if (!SHA_RE.test(String(sha))) return { state: 'refused', touches: [] };
   let usable = 0;
+  const unusable = [];
   for (const raw of repos) {
     const repo = String(raw).replace(/\\/g, '/').replace(/^(?:\.\/)+|\/+$/g, '') || '.';
     const dir = resolve(root, repo);
-    try { await git(dir, ['rev-parse', '--git-dir']); } catch { continue; }
+    try { await git(dir, ['rev-parse', '--git-dir']); } catch (e) { unusable.push(`${repo} : ${cause(e)}`); continue; }
     usable++;
     let type;
     try {
       type = (await git(dir, ['cat-file', '-t', sha])).trim();
     } catch (e) {
       if (typeof e.code === 'number' && !e.killed) continue; // git a répondu : objet inconnu ou ambigu dans ce dépôt
-      return ERROR;
+      return error(`${repo} cat-file : ${cause(e)}`);
     }
     if (type !== 'commit') continue;
     let files;
-    try { files = (await git(dir, ['show', '--name-only', '--format=', sha])).split('\n').map((f) => f.trim()).filter(Boolean); } catch { return ERROR; }
+    try { files = (await git(dir, ['show', '--name-only', '--format=', sha])).split('\n').map((f) => f.trim()).filter(Boolean); } catch (e) { return error(`${repo} show : ${cause(e)}`); }
     const touches = paths.filter((p) => files.includes(p) || files.some((f) => `${repo}/${f}` === p));
     return { state: 'found', repo, touches };
   }
-  return usable ? { state: 'absent', touches: [] } : ERROR;
+  return usable ? { state: 'absent', touches: [] } : error(`aucun dépôt utilisable (${unusable.join(' ; ')})`);
 }

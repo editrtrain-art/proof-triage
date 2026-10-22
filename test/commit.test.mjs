@@ -60,7 +60,9 @@ test('panne d\'environnement (git introuvable) → error, jamais absent', async 
   const path = process.env.PATH;
   process.env.PATH = '';
   try {
-    assert.equal((await checkCommit(shaA, { root, repos: ['site'] })).state, 'error');
+    const r = await checkCommit(shaA, { root, repos: ['site'] });
+    assert.equal(r.state, 'error');
+    assert.match(r.reason, /aucun dépôt utilisable|ENOENT/);
   } finally {
     process.env.PATH = path;
   }

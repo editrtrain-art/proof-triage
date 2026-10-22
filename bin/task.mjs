@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-// Commande task (v0.2) : add | close | cancel | reschedule | delete, une opération par appel.
+// Commande task (v0.2) : add | close | cancel | reschedule | reassign | delete, une opération par appel.
 // Validation avant écriture, sauvegarde datée sous AUDIT/, refus si le registre a bougé entre lecture et écriture.
 // Annuler plutôt que supprimer : delete exige --confirm.
 import { parseArgs } from 'node:util';
