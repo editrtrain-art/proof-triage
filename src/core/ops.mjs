@@ -7,6 +7,7 @@ const ISO = /^\d{4}-\d{2}-\d{2}$/;
 export const STATUSES = ['todo', 'doing', 'open', 'parked', 'done', 'cancelled'];
 const OWNERS = ['claude', 'user'];
 const PRIORITIES = ['P0', 'P1', 'P2', 'P3', 'P4'];
+const RECURRENCES = ['daily', 'weekly', 'monthly', 'quarterly', 'trimestriel', 'per-post', 'per-product']; // relevées au registre le 22/10
 // Forme des ids relevée au registre (majuscules admises : kit-1-1-L0) ; jamais d'espace ni de caractère Markdown.
 const ID = /^[A-Za-z0-9][A-Za-z0-9-]*$/;
 const CLOSED = ['done', 'cancelled'];
@@ -29,7 +30,9 @@ export function applyOp(doc, op, { today }) {
     if (!OWNERS.includes(op.owner)) throw new Error(`add : owner attendu ${OWNERS.join('|')}`);
     const priority = op.priority || 'P2';
     if (!PRIORITIES.includes(priority)) throw new Error(`add : priority attendu ${PRIORITIES.join('|')}`);
-    d.tasks.push({ id: op.id, title: op.title, due: op.due, owner: op.owner, status: 'todo', priority, source: op.source || '', tags: op.tags || [], notes: op.notes || '', doneDate: null });
+    if (op.recurrence && !RECURRENCES.includes(op.recurrence)) throw new Error(`add : recurrence attendu ${RECURRENCES.join('|')}`);
+    d.tasks.push({ id: op.id, title: op.title, due: op.due, owner: op.owner, status: 'todo', priority, source: op.source || '', tags: op.tags || [],
+      ...(op.recurrence ? { recurrence: op.recurrence } : {}), notes: op.notes || '', doneDate: null });
     return d;
   }
   if (i === -1) throw new Error(`tâche inconnue : ${op.id}`);

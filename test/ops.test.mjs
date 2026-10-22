@@ -57,6 +57,13 @@ test('add : priorité P0-P4 seulement, id sans espace ni caractère Markdown (ma
   assert.equal(task(applyOp(doc(), { ...base, id: 'kit-1-1-L0', priority: 'P0' }, { today: TODAY }), 'kit-1-1-L0').priority, 'P0');
 });
 
+test('add --recurrence : valeurs relevées au registre seulement', () => {
+  const base = { kind: 'add', id: 'c', title: 'C', due: '2026-11-01', owner: 'claude' };
+  assert.equal(task(applyOp(doc(), { ...base, recurrence: 'monthly' }, { today: TODAY }), 'c').recurrence, 'monthly');
+  assert.equal('recurrence' in task(applyOp(doc(), base, { today: TODAY }), 'c'), false);
+  assert.throws(() => applyOp(doc(), { ...base, recurrence: 'parfois' }, { today: TODAY }), /recurrence/);
+});
+
 test('toute opération met à jour le champ updated du registre', () => {
   assert.equal(applyOp({ ...doc(), updated: '2026-01-01' }, { kind: 'close', id: 'a' }, { today: TODAY }).updated, TODAY);
 });

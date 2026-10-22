@@ -58,6 +58,8 @@ if (o.apply) {
     const next = ops.reduce((d, op) => applyOp(d, op, { today: o.today }), reg.doc);
     const r = save(registry, next, { expectHash: reg.hash, backupDir: conf.outDir('backup', o.today) });
     console.log(`✓ ${ops.length} décision(s) appliquée(s) · sauvegarde : ${r.backup}`);
+    const pruned = conf.pruneBackups(o.today);
+    if (pruned.length) console.log(`${pruned.length} sauvegarde(s) de plus de 30 j retirée(s)`);
   } catch (e) {
     fail(e.message);
   }

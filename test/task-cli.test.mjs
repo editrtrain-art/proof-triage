@@ -1,7 +1,7 @@
 // Commande task (v0.2) de bout en bout, sur une COPIE de la fixture synthétique.
 import { test, before, after } from 'node:test';
 import assert from 'node:assert/strict';
-import { mkdtempSync, writeFileSync, readFileSync, readdirSync, rmSync } from 'node:fs';
+import { mkdtempSync, mkdirSync, writeFileSync, readFileSync, readdirSync, rmSync } from 'node:fs';
 import { spawnSync } from 'node:child_process';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
@@ -51,6 +51,15 @@ test('refus : delete sans --confirm, id déjà existant, commande inconnue, éch
     assert.match(r.stderr, /proof-triage/);
   }
   assert.equal(readFileSync(registry, 'utf8'), before);
+});
+
+test('add --recurrence, et une écriture purge les sauvegardes de plus de 30 jours', () => {
+  mkdirSync(join(audit, 'proof-triage-root-registry-backup-2026-08-01'), { recursive: true });
+  const r = task('add', 'tri-recurrent', '--title', 'Tri', '--due', '2026-11-30', '--owner', 'claude', '--recurrence', 'monthly');
+  assert.equal(r.status, 0, r.stderr);
+  assert.equal(find('tri-recurrent').recurrence, 'monthly');
+  assert.ok(!readdirSync(audit).includes('proof-triage-root-registry-backup-2026-08-01'));
+  assert.match(r.stdout, /1 sauvegarde\(s\) de plus de 30 j retirée\(s\)/);
 });
 
 test('reassign --owner user', () => {

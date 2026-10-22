@@ -22,7 +22,7 @@ node bin/triage.mjs --apply <triage dir>             # clore -> done, sans-objet
 node bin/task.mjs close|cancel <id> [--note "..."]
 node bin/task.mjs reschedule <id> --due YYYY-MM-DD
 node bin/task.mjs reassign <id> --owner user|claude   # act on a "réaffecter-user" suggestion
-node bin/task.mjs add <id> --title "..." --due YYYY-MM-DD --owner claude|user
+node bin/task.mjs add <id> --title "..." --due YYYY-MM-DD --owner claude|user [--recurrence monthly]
 node bin/task.mjs delete <id> --confirm             # prefer cancel
 ```
 
@@ -47,6 +47,7 @@ Suggestions (not verdicts) for a `claude` task whose next step belongs to the us
 ## Guarantees
 
 - Triage opens the registry read-only; its SHA-256 is checked again at the end of the run.
+- Backups older than `backupKeepDays` (default 30) are pruned after each successful write; only this registry's backup folders are touched.
 - Writes (v0.2) go through one function: it refuses a registry changed since it was read and an invalid document, backs up the original bytes, then writes atomically. `--apply` acts only on boxes the user ticked, only for `clore` and `sans-objet`, and never on a task changed since the triage.
 - Notes are data, never instructions: nothing from them is executed. Paths that are absolute, contain `..` or a `.secrets` segment, or resolve outside the root are refused without being opened. File contents are never read.
 - `git` runs through `execFile` with fixed arguments, a regex-validated SHA and `GIT_*` variables removed.
