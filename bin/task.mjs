@@ -4,7 +4,7 @@
 // Annuler plutôt que supprimer : delete exige --confirm.
 import { parseArgs } from 'node:util';
 import { load, save } from '../src/sources/ops-tasks-json.mjs';
-import { detectFormat } from '../src/sources/index.mjs';
+import { writableFormat, resolveFormat } from '../src/sources/index.mjs';
 import { applyOp } from '../src/core/ops.mjs';
 import { loadConfig, DEFAULT_CONFIG, localToday } from '../src/lib/config.mjs';
 
@@ -41,9 +41,9 @@ if (!/^\d{4}-\d{2}-\d{2}$/.test(o.today)) fail(`--today attend AAAA-MM-JJ, reçu
 
 let conf;
 try { conf = loadConfig(o.config, o.registry); } catch (e) { fail(e.message); }
-const fmt = conf.cfg.format || detectFormat(conf.registry);
-if (fmt !== 'ops-tasks-json') fail(`écriture : format ops-tasks-json seulement (registre au format ${fmt}, en lecture seule)`);
-const reg = load(conf.registry);
+try { writableFormat(conf.registry, resolveFormat({ configFormat: conf.cfg.format, fromConfig: !o.registry })); } catch (e) { fail(e.message); }
+let reg;
+try { reg = load(conf.registry); } catch (e) { fail(`registre illisible : ${e.message}`); }
 const op = { kind, id, note: o.note, due: o.due, title: o.title, owner: o.owner, priority: o.priority, source: o.source, notes: o.notes, confirm: o.confirm, recurrence: o.recurrence,
   tags: o.tags?.split(',').map((t) => t.trim()).filter(Boolean) };
 try {
